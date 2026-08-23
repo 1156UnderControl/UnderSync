@@ -1,0 +1,509 @@
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum TaskStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum PartKind {
+  MANUFACTURED
+  COTS
+}
+
+enum PartStatus {
+  DRAFT
+  IN_DEVELOPMENT
+  READY_FOR_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  READY_FOR_MANUFACTURING
+  IN_MANUFACTURING
+  COMPLETED
+  ACTIVE
+  DISCONTINUED
+  ARCHIVED
+  CANCELLED
+}
+
+enum CadContextKind {
+  WORKSPACE
+  VERSION
+}
+
+enum PartUserRole {
+  OWNER
+  CONTRIBUTOR
+}
+
+enum CustomFieldEntityType {
+  USER
+  TASK
+  PART
+}
+
+enum CustomFieldValueType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  DATE
+  SELECT
+}
+
+enum IntegrationProvider {
+  ONSHAPE
+  NOTION
+}
+
+enum IntegrationAuthMode {
+  OAUTH
+  INTERNAL_TOKEN
+}
+
+enum IntegrationConnectionStatus {
+  NOT_CONFIGURED
+  ACTIVE
+  ERROR
+  DISABLED
+}
+
+enum ExternalIdentityStatus {
+  PENDING
+  VERIFIED
+  REVOKED
+}
+
+enum OnshapeRenameStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+model User {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  email              String
+  displayName        String               @map("display_name")
+  passwordHash       String?              @map("password_hash")
+  role               UserRole             @default(MEMBER)
+  status             AccountStatus        @default(ACTIVE)
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdTasks       Task[]               @relation("TaskCreator")
+  assignedTasks      Task[]               @relation("TaskAssignee")
+  partAssignments    PartUserAssignment[]
+  customFieldValues  CustomFieldValue[]
+  sessions           Session[]
+  externalIdentities ExternalIdentity[]
+  oauthStates        OAuthAuthorizationState[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model IntegrationConnection {
+  id                 String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider           IntegrationProvider
+  key                String                      @db.VarChar(64)
+  displayName        String                      @map("display_name")
+  authMode           IntegrationAuthMode         @map("auth_mode")
+  status             IntegrationConnectionStatus @default(NOT_CONFIGURED)
+  externalTenantId   String?                     @map("external_tenant_id")
+  config             Json                        @default("{}")
+  createdAt          DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  externalIdentities ExternalIdentity[]
+  oauthStates        OAuthAuthorizationState[]
+
+  @@unique([provider, key])
+  @@map("integration_connections")
+}
+
+model ExternalIdentity {
+  id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String                 @map("user_id") @db.Uuid
+  connectionId        String                 @map("connection_id") @db.Uuid
+  externalUserId      String                 @map("external_user_id")
+  externalDisplayName String?                @map("external_display_name")
+  externalEmail       String?                @map("external_email")
+  status              ExternalIdentityStatus @default(PENDING)
+  metadata            Json                   @default("{}")
+  linkedAt            DateTime               @default(now()) @map("linked_at") @db.Timestamptz(6)
+  verifiedAt          DateTime?              @map("verified_at") @db.Timestamptz(6)
+  createdAt           DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection          IntegrationConnection  @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  onshapeGrant        OnshapeOAuthGrant?
+
+  @@unique([connectionId, userId])
+  @@unique([connectionId, externalUserId])
+  @@index([userId, status])
+  @@map("external_identities")
+}
+
+model OAuthAuthorizationState {
+  id           String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String                @map("user_id") @db.Uuid
+  connectionId String                @map("connection_id") @db.Uuid
+  stateHash    String                @unique @map("state_hash") @db.Char(64)
+  returnTo     String                @default("/account") @map("return_to")
+  expiresAt    DateTime              @map("expires_at") @db.Timestamptz(6)
+  consumedAt   DateTime?             @map("consumed_at") @db.Timestamptz(6)
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection   IntegrationConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("oauth_authorization_states")
+}
+
+model OnshapeOAuthGrant {
+  externalIdentityId   String           @id @map("external_identity_id") @db.Uuid
+  accessTokenEncrypted String           @map("access_token_encrypted")
+  refreshTokenEncrypted String?         @map("refresh_token_encrypted")
+  tokenType            String           @default("Bearer") @map("token_type")
+  scope                 String?
+  expiresAt             DateTime?        @map("expires_at") @db.Timestamptz(6)
+  createdAt             DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  externalIdentity      ExternalIdentity @relation(fields: [externalIdentityId], references: [id], onDelete: Cascade)
+
+  @@map("onshape_oauth_grants")
+}
+
+model Session {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  tokenHash     String    @unique @map("token_hash") @db.Char(64)
+  csrfTokenHash String    @map("csrf_token_hash") @db.Char(64)
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Season {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                String               @db.VarChar(8)
+  name                String
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  parts               Part[]
+  partNumberSequences PartNumberSequence[]
+
+  @@unique([code])
+  @@map("seasons")
+}
+
+model Subsystem {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String   @db.VarChar(12)
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  parts     Part[]
+
+  @@unique([code])
+  @@map("subsystems")
+}
+
+model ManufacturingMethod {
+  id               String                               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String                               @db.VarChar(12)
+  name             String
+  active           Boolean                              @default(true)
+  createdAt        DateTime                             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime                             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  parts            Part[]
+  fileRequirements ManufacturingMethodFileRequirement[]
+  allowedMaterials ManufacturingMethodMaterial[]
+
+  @@unique([code])
+  @@map("manufacturing_methods")
+}
+
+model PartsTrackingFormSettings {
+  id                     Int      @id @default(1) @db.SmallInt
+  formTitle              String   @default("Create the tracking record") @map("form_title")
+  nameLabel              String   @default("Name") @map("name_label")
+  namePlaceholder        String   @default("Human-readable UnderSync name") @map("name_placeholder")
+  quantityLabel          String   @default("How many?") @map("quantity_label")
+  subsystemLabel         String   @default("Subsystem") @map("subsystem_label")
+  designerLabel          String   @default("Designer") @map("designer_label")
+  fabricationMethodLabel String   @default("Fabrication method") @map("fabrication_method_label")
+  materialLabel          String   @default("Material") @map("material_label")
+  submitLabel            String   @default("Generate Parts Tracking ID") @map("submit_label")
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("parts_tracking_form_settings")
+}
+
+model Material {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String   @db.VarChar(12)
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  parts     Part[]
+  manufacturingMethods ManufacturingMethodMaterial[]
+
+  @@unique([code])
+  @@map("materials")
+}
+
+model ManufacturingMethodMaterial {
+  manufacturingMethodId String              @map("manufacturing_method_id") @db.Uuid
+  materialId            String              @map("material_id") @db.Uuid
+  manufacturingMethod   ManufacturingMethod @relation(fields: [manufacturingMethodId], references: [id], onDelete: Cascade)
+  material              Material            @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@id([manufacturingMethodId, materialId])
+  @@index([materialId])
+  @@map("manufacturing_method_materials")
+}
+
+model FileType {
+  id                 String                               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code               String                               @unique @db.VarChar(16)
+  name               String
+  createdAt          DateTime                             @default(now()) @map("created_at") @db.Timestamptz(6)
+  methodRequirements ManufacturingMethodFileRequirement[]
+  manufacturingFiles ManufacturingFile[]
+
+  @@map("file_types")
+}
+
+model ManufacturingMethodFileRequirement {
+  manufacturingMethodId String              @map("manufacturing_method_id") @db.Uuid
+  fileTypeId            String              @map("file_type_id") @db.Uuid
+  required              Boolean             @default(true)
+  manufacturingMethod   ManufacturingMethod @relation(fields: [manufacturingMethodId], references: [id], onDelete: Cascade)
+  fileType              FileType            @relation(fields: [fileTypeId], references: [id], onDelete: Restrict)
+
+  @@id([manufacturingMethodId, fileTypeId])
+  @@map("manufacturing_method_file_requirements")
+}
+
+model PartNumberSequence {
+  seasonId  String @id @map("season_id") @db.Uuid
+  nextValue Int    @default(1) @map("next_value")
+  season    Season @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+
+  @@map("part_number_sequences")
+}
+
+model Part {
+  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seasonId                String               @map("season_id") @db.Uuid
+  subsystemId             String               @map("subsystem_id") @db.Uuid
+  manufacturingMethodId   String?              @map("manufacturing_method_id") @db.Uuid
+  materialId              String?              @map("material_id") @db.Uuid
+  trackingCode            String               @unique @default(dbgenerated()) @map("tracking_code")
+  sequenceValue           Int                  @default(dbgenerated()) @map("sequence_value")
+  originTeamNumber        Int                  @default(dbgenerated()) @map("origin_team_number")
+  originSeasonCode        String               @default(dbgenerated()) @map("origin_season_code") @db.VarChar(8)
+  originSubsystemCode     String               @default(dbgenerated()) @map("origin_subsystem_code") @db.VarChar(12)
+  originManufacturingCode String               @default(dbgenerated()) @map("origin_manufacturing_code") @db.VarChar(12)
+  originMaterialCode      String               @default(dbgenerated()) @map("origin_material_code") @db.VarChar(12)
+  kind                    PartKind
+  name                    String
+  description             String?
+  status                  PartStatus
+  isLocked                Boolean              @default(false) @map("is_locked")
+  manufacturingInfo       String?              @map("manufacturing_info")
+  createdAt               DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  season                  Season               @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  subsystem               Subsystem            @relation(fields: [subsystemId], references: [id], onDelete: Restrict)
+  manufacturingMethod     ManufacturingMethod? @relation(fields: [manufacturingMethodId], references: [id], onDelete: Restrict)
+  material                Material?            @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  cotsDetails             CotsPartDetails?
+  requirements            PartRequirement[]
+  files                   ManufacturingFile[]
+  tasks                   TaskPart[]
+  userAssignments         PartUserAssignment[]
+  cadReferences           CadReference[]
+  customFieldValues       CustomFieldValue[]
+
+  @@unique([seasonId, sequenceValue])
+  @@index([kind, status])
+  @@index([subsystemId, status])
+  @@map("parts")
+}
+
+model CotsPartDetails {
+  partId                 String  @id @map("part_id") @db.Uuid
+  manufacturer           String
+  manufacturerPartNumber String  @map("manufacturer_part_number")
+  supplier               String?
+  purchaseUrl            String? @map("purchase_url")
+  part                   Part    @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([manufacturer, manufacturerPartNumber])
+  @@map("cots_part_details")
+}
+
+model PartRequirement {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partId           String   @map("part_id") @db.Uuid
+  context          String
+  requiredQuantity Int      @map("required_quantity")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  part             Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([partId, context])
+  @@index([partId])
+  @@map("part_requirements")
+}
+
+model ManufacturingFile {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partId           String   @map("part_id") @db.Uuid
+  fileTypeId       String   @map("file_type_id") @db.Uuid
+  reference        String
+  originalFileName String?  @map("original_file_name")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  part             Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  fileType         FileType @relation(fields: [fileTypeId], references: [id], onDelete: Restrict)
+
+  @@index([partId, fileTypeId])
+  @@map("manufacturing_files")
+}
+
+model Task {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creatorId         String             @map("creator_id") @db.Uuid
+  assigneeId        String?            @map("assignee_id") @db.Uuid
+  title             String
+  description       String?
+  status            TaskStatus         @default(OPEN)
+  priority          TaskPriority       @default(NORMAL)
+  creationDate      DateTime           @default(now()) @map("creation_date") @db.Date
+  dueDate           DateTime?          @map("due_date") @db.Date
+  completedAt       DateTime?          @map("completed_at") @db.Timestamptz(6)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  creator           User               @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  assignee          User?              @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  parts             TaskPart[]
+  customFieldValues CustomFieldValue[]
+
+  @@index([creatorId])
+  @@index([assigneeId, status])
+  @@index([status, dueDate])
+  @@map("tasks")
+}
+
+model TaskPart {
+  taskId String @map("task_id") @db.Uuid
+  partId String @map("part_id") @db.Uuid
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  part   Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, partId])
+  @@map("task_parts")
+}
+
+model PartUserAssignment {
+  partId String       @map("part_id") @db.Uuid
+  userId String       @map("user_id") @db.Uuid
+  role   PartUserRole @default(CONTRIBUTOR)
+  part   Part         @relation(fields: [partId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([partId, userId])
+  @@index([userId])
+  @@map("part_user_assignments")
+}
+
+model CadReference {
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partId               String         @map("part_id") @db.Uuid
+  server               String         @default("https://cad.onshape.com")
+  documentId           String         @map("document_id")
+  contextKind          CadContextKind @map("context_kind")
+  workspaceOrVersionId String         @map("workspace_or_version_id")
+  elementId            String         @map("element_id")
+  microversionId       String         @map("microversion_id")
+  onshapePartId        String         @map("onshape_part_id")
+  configuration        String         @default("")
+  geometrySelectionId  String?        @map("geometry_selection_id")
+  onshapeNameBefore    String?        @map("onshape_name_before")
+  onshapeNameAfter     String?        @map("onshape_name_after")
+  renameStatus         OnshapeRenameStatus @default(PENDING) @map("rename_status")
+  renameError          String?        @map("rename_error")
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  part                 Part           @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([server, documentId, contextKind, workspaceOrVersionId, elementId, microversionId, onshapePartId, configuration])
+  @@unique([server, documentId, elementId, onshapePartId, configuration])
+  @@index([partId])
+  @@index([documentId, elementId])
+  @@map("cad_references")
+}
+
+model CustomFieldDefinition {
+  id         String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityType CustomFieldEntityType @map("entity_type")
+  key        String                @db.VarChar(64)
+  label      String
+  valueType  CustomFieldValueType  @map("value_type")
+  required   Boolean               @default(false)
+  active     Boolean               @default(true)
+  options    Json                  @default("{}")
+  createdAt  DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  values     CustomFieldValue[]
+
+  @@unique([entityType, key])
+  @@map("custom_field_definitions")
+}
+
+model CustomFieldValue {
+  id           String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  definitionId String                @map("definition_id") @db.Uuid
+  userId       String?               @map("user_id") @db.Uuid
+  taskId       String?               @map("task_id") @db.Uuid
+  partId       String?               @map("part_id") @db.Uuid
+  value        Json
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  definition   CustomFieldDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  user         User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task         Task?                 @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  part         Part?                 @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@index([definitionId])
+  @@map("custom_field_values")
+}

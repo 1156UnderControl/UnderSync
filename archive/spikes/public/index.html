@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UnderSync Onshape Selection Spike</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page wide">
+      <header>
+        <p class="eyebrow">Disposable integration spike</p>
+        <h1>UnderSync × Onshape</h1>
+        <p>OAuth and Element Right Panel selection-message verification only.</p>
+      </header>
+
+      <section class="card">
+        <h2>OAuth status</h2>
+        <dl class="status-grid">
+          <div><dt>Configured</dt><dd id="oauth-configured">Checking…</dd></div>
+          <div><dt>Authenticated</dt><dd id="oauth-authenticated">Checking…</dd></div>
+          <div><dt>API server</dt><dd id="api-base">—</dd></div>
+        </dl>
+        <p id="oauth-error" class="status error hidden"></p>
+        <div class="actions">
+          <a class="button-link" href="/oauth/login">Authenticate with Onshape</a>
+          <button id="test-api" type="button">Test Onshape API</button>
+        </div>
+        <pre id="api-result">No API test has run.</pre>
+      </section>
+
+      <section class="card">
+        <h2>Right Panel extension</h2>
+        <p>Use this Action URL for an <strong>Element right panel</strong> extension with the <strong>Inside Part Studio</strong> context:</p>
+        <pre id="action-url">http://localhost:8000/panel?documentId={$documentId}&amp;workspaceOrVersion={$workspaceOrVersion}&amp;workspaceOrVersionId={$workspaceOrVersionId}&amp;elementId={$elementId}&amp;configuration={$configuration}</pre>
+        <p class="muted">Onshape appends default parameters including <code>server</code>. The panel maps <code>workspaceOrVersionId</code> into the required client-message <code>workspaceId</code> field.</p>
+        <p><a href="/panel">Open the panel standalone</a> (context will be empty outside Onshape).</p>
+      </section>
+
+      <section class="card warning-card">
+        <h2>Scope guard</h2>
+        <p>This app has no database, production authentication, task sync, Notion integration, inventory, manufacturing workflow, or CAD change detection.</p>
+      </section>
+    </main>
+    <script type="module" src="/home.js"></script>
+  </body>
+</html>

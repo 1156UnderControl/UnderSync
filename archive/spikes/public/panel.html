@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UnderSync Selection Spike</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="panel-body">
+    <main class="panel-page">
+      <header>
+        <p class="eyebrow">Onshape selection spike</p>
+        <h1>UnderSync</h1>
+        <p id="handshake-status" class="status pending">Preparing applicationInit…</p>
+      </header>
+
+      <section class="card compact">
+        <h2>Onshape context</h2>
+        <dl class="context-list">
+          <div><dt>Server</dt><dd id="context-server">—</dd></div>
+          <div><dt>Document ID</dt><dd id="context-document">—</dd></div>
+          <div><dt>Workspace / Version</dt><dd id="context-kind">—</dd></div>
+          <div><dt>Workspace / Version ID</dt><dd id="context-workspace">—</dd></div>
+          <div><dt>Element ID</dt><dd id="context-element">—</dd></div>
+          <div><dt>Configuration</dt><dd id="context-configuration">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="card compact">
+        <h2>Rename selected Part</h2>
+        <p class="muted">Spike 3 only. Resolve the current selection first; rename uses the cached Part identity and one metadata write.</p>
+        <label for="new-part-name">New name</label>
+        <input id="new-part-name" type="text" maxlength="256" value="Part 1 | UDS-TEST" />
+        <div class="actions stacked">
+          <button id="rename-part" type="button" disabled>Rename Part</button>
+        </div>
+        <p id="rename-status" class="muted" role="status" aria-live="polite">Resolve a Part before renaming.</p>
+        <pre id="rename-result">No rename request has run.</pre>
+      </section>
+
+      <section class="card compact">
+        <h2>Resolved Onshape part</h2>
+        <p id="resolve-explanation" class="muted">Select exactly one body to enable resolution.</p>
+        <div class="actions stacked">
+          <button id="resolve-body" type="button" disabled>Resolve Selected Body</button>
+          <button id="investigate-ownership" type="button" disabled>Investigate FACE/EDGE Ownership</button>
+          <button id="copy-resolution" type="button" disabled>Copy Raw API Evidence</button>
+        </div>
+        <label class="diagnostic-toggle"><input id="diagnostic-mode" type="checkbox" /> Include raw API evidence for this request (development only)</label>
+        <p id="copy-resolution-status" class="muted" role="status" aria-live="polite"></p>
+        <dl class="context-list">
+          <div><dt>Document ID</dt><dd id="resolved-document">Not available from this API</dd></div>
+          <div><dt>Workspace ID</dt><dd id="resolved-workspace">Not available from this API</dd></div>
+          <div><dt>Element ID</dt><dd id="resolved-element">Not available from this API</dd></div>
+          <div><dt>Microversion ID</dt><dd id="resolved-microversion">Not available from this API</dd></div>
+          <div><dt>Selection ID</dt><dd id="resolved-selection">Not available from this API</dd></div>
+          <div><dt>Selection type</dt><dd id="resolved-selection-type">Not available from this API</dd></div>
+          <div><dt>Status</dt><dd id="resolved-status">Not run</dd></div>
+          <div><dt>Part ID</dt><dd id="resolved-part-id">Not available from this API</dd></div>
+          <div><dt>Name</dt><dd id="resolved-name">Not available from this API</dd></div>
+          <div><dt>Part number</dt><dd id="resolved-number">Not available from this API</dd></div>
+          <div><dt>Configuration</dt><dd id="resolved-configuration">Not available from this API</dd></div>
+        </dl>
+        <h3>Resolution response / diagnostic evidence</h3>
+        <pre id="resolution-result">No resolution request has run.</pre>
+      </section>
+
+      <section class="card compact">
+        <h2>API budget and memory</h2>
+        <p class="muted">Session-local counters only. This panel never polls Onshape.</p>
+        <button id="refresh-diagnostics" type="button">Refresh Diagnostics</button>
+        <pre id="diagnostics-result">Loading local diagnostics…</pre>
+      </section>
+
+      <section class="card compact">
+        <h2>Current selection</h2>
+        <dl class="context-list">
+          <div><dt>Entity count</dt><dd id="selection-count">No SELECTION message yet</dd></div>
+          <div><dt>Entity types</dt><dd id="selection-types">—</dd></div>
+          <div><dt>Identifiers</dt><dd id="selection-identifiers">—</dd></div>
+        </dl>
+        <p id="selection-note" class="muted">Geometry identifiers shown here are observations, not permanent UnderSync identities.</p>
+        <h3>Raw selection message</h3>
+        <pre id="selection-raw">No SELECTION message received.</pre>
+      </section>
+
+      <section class="card compact">
+        <h2>Event log</h2>
+        <p class="muted">Accepted inbound messages and outbound applicationInit messages are retained in this browser tab.</p>
+        <div class="actions stacked">
+          <button id="clear-log" type="button">Clear event log</button>
+          <button id="clear-selection" type="button">Clear displayed selection</button>
+          <button id="download-log" type="button">Download event log</button>
+        </div>
+        <pre id="event-log">No events yet.</pre>
+      </section>
+
+      <section class="card compact">
+        <h2>OAuth / API test</h2>
+        <p id="auth-status">Checking local OAuth state…</p>
+        <div class="actions stacked">
+          <a class="button-link" href="/oauth/login" target="_blank" rel="noopener">Authenticate with Onshape</a>
+          <button id="test-api" type="button">Test Onshape API</button>
+        </div>
+        <pre id="api-result">No API test has run.</pre>
+      </section>
+    </main>
+    <script type="module" src="/panel.js"></script>
+  </body>
+</html>
