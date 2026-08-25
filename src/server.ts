@@ -2,8 +2,8 @@ import { createApp, loadConfig } from "./app.js";
 
 const config = loadConfig();
 const app = createApp(config);
-const server = app.listen(config.port, "127.0.0.1", () => {
-  console.log(`UnderSync listening at http://localhost:${config.port}`);
+const server = app.listen(config.port, config.host, () => {
+  console.log(`UnderSync listening on ${config.host}:${config.port} (local: http://localhost:${config.port})`);
 });
 
 function shutdown(signal: string): void {

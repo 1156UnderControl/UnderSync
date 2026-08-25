@@ -10,6 +10,7 @@ import type { OnshapeConfig } from "./onshape.js";
 import { CSRF_COOKIE, clearAuthCookies, ensureCsrfCookie, hashToken, isValidEmail, parseCookies, setAuthCookies, validatePassword } from "./security.js";
 
 export interface AppConfig {
+  host: string;
   port: number;
   databaseUrl: string;
   sessionTtlHours: number;
@@ -28,12 +29,15 @@ interface LoginAttempt {
 }
 
 export function loadConfig(environment: NodeJS.ProcessEnv = process.env): AppConfig {
+  const host = environment.HOST?.trim() || "0.0.0.0";
   const port = Number.parseInt(environment.PORT ?? "8000", 10);
   const sessionTtlHours = Number.parseInt(environment.SESSION_TTL_HOURS ?? "168", 10);
   if (!environment.DATABASE_URL) throw new Error("DATABASE_URL is required.");
+  if (!/^(?:[A-Za-z0-9.-]+|::)$/.test(host)) throw new Error("HOST must be an IP address or hostname.");
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("PORT must be between 1 and 65535.");
   if (!Number.isInteger(sessionTtlHours) || sessionTtlHours < 1) throw new Error("SESSION_TTL_HOURS must be positive.");
   return {
+    host,
     port,
     databaseUrl: environment.DATABASE_URL,
     sessionTtlHours,

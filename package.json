@@ -3,13 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "description": "UnderSync robotics-team operations application.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit false --outDir dist",
-    "dev": "npm run build && node --env-file-if-exists=.env --watch dist/src/server.js",
-    "start": "npm run build && node --env-file-if-exists=.env dist/src/server.js",
-    "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test dist/test/*.test.js",
+    "build": "npm run typecheck && vite build",
+    "dev": "vite",
+    "convex:dev": "convex dev",
+    "typecheck": "tsc -p tsconfig.frontend.json --noEmit",
+    "test": "npm run typecheck && npm run legacy:test",
+    "legacy:build": "tsc -p tsconfig.legacy.json --noEmit false --outDir dist-legacy",
+    "legacy:dev": "npm run legacy:build && node --env-file-if-exists=.env --watch dist-legacy/src/server.js",
+    "legacy:start": "npm run legacy:build && node --env-file-if-exists=.env dist-legacy/src/server.js",
+    "legacy:test": "npm run legacy:build && node --test dist-legacy/test/*.test.js",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
@@ -21,14 +28,21 @@
   },
   "dependencies": {
     "argon2": "0.44.0",
+    "convex": "^1.45.0",
     "express": "^5.1.0",
-    "pg": "8.23.0"
+    "pg": "8.23.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.0",
     "@types/pg": "8.16.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
     "prisma": "7.9.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "^8.2.2"
   }
 }

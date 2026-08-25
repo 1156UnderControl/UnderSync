@@ -1,5 +1,10 @@
 # UnderSync Local Database
 
+> **Legacy compatibility only.** The active architecture uses Convex. This
+> PostgreSQL/Prisma database is retained temporarily so the existing Express
+> application can still be run with the `legacy:*` scripts; do not add new
+> product schema here.
+
 ## Technology and local server
 
 UnderSync uses PostgreSQL 17.6 for the single fixed organization, FRC Team 1156 — Under Control. A separate `teams` table is intentionally unnecessary. Prisma 7.9.1 manages the declarative schema and migration history; reviewed SQL in each migration adds PostgreSQL constraints and triggers that Prisma cannot express.

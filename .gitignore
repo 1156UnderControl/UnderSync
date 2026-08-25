@@ -1,8 +1,13 @@
 node_modules/
 .npm-cache/
 dist/
+dist-legacy/
+dist-web/
 archive/spikes/build/
 .env
+.env.local
+.env.*.local
+.vercel/
 *.log
 selection-events-*.json
 generated/

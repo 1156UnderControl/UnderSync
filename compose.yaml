@@ -1,5 +1,7 @@
 name: undersync
 
+# Legacy compatibility database. New backend work belongs in Convex.
+
 services:
   postgres:
     image: postgres:17.6-bookworm

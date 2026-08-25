@@ -4,6 +4,7 @@ import { escapeHtml } from "../src/pages.js";
 import { hashToken, isValidEmail, safeEqual, validatePassword } from "../src/security.js";
 import { decryptIntegrationSecret, encryptIntegrationSecret } from "../src/integration-crypto.js";
 import { parseSelectionInput, trackedOnshapeName } from "../src/onshape.js";
+import { loadConfig } from "../src/app.js";
 
 test("security helpers validate account input and tokens", () => {
   assert.equal(isValidEmail("member@team.test"), true);
@@ -36,4 +37,11 @@ test("selection parsing drops unresolved Onshape action parameters", () => {
   });
   assert.equal(selection.configuration, undefined);
   assert.equal(selection.selectionId, "RdDD");
+});
+
+test("server configuration accepts all-interface port 8000 binding", () => {
+  const config = loadConfig({ DATABASE_URL: "postgresql://local/test", HOST: "0.0.0.0", PORT: "8000" });
+  assert.equal(config.host, "0.0.0.0");
+  assert.equal(config.port, 8000);
+  assert.throws(() => loadConfig({ DATABASE_URL: "postgresql://local/test", HOST: "invalid/path" }), /HOST/);
 });
