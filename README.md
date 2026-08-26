@@ -2,11 +2,14 @@
 
 UnderSync is the operations platform for FRC Team 1156 — Under Control.
 
-The active application foundation is now:
+The active application now includes:
 
 - React + Vite frontend, prepared for Vercel;
-- Convex backend, functions and future database;
-- no product-specific Convex schema yet.
+- Convex authentication and a reactive application database;
+- member registration/login, account management and password changes;
+- admin user controls, including access, disable/delete and password reset;
+- configurable Parts Tracking with subsystem, designer, method and compatible material;
+- a responsive interface using the official UnderSync logo and palette.
 
 The previous Express/PostgreSQL implementation has not been deleted. It remains
 isolated as a legacy compatibility application while later phases migrate its
@@ -26,11 +29,11 @@ npm.cmd run dev
 ```
 
 ```powershell
-npx.cmd convex dev
+npm.cmd run convex:dev
 ```
 
-Open <http://localhost:8000>. The page displays **Connected to Convex** when
-the frontend has reached the development backend successfully.
+Open <http://localhost:8000>. Register the first account to make it the initial
+administrator; later accounts are Members until an Admin promotes them.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for first-time Convex setup, environment
 variables, Vercel configuration, verification commands and the legacy fallback.

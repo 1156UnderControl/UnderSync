@@ -10,7 +10,7 @@
   "scripts": {
     "build": "npm run typecheck && vite build",
     "dev": "vite",
-    "convex:dev": "convex dev",
+    "convex:dev": "convex dev --env-file .env.local",
     "typecheck": "tsc -p tsconfig.frontend.json --noEmit",
     "test": "npm run typecheck && npm run legacy:test",
     "legacy:build": "tsc -p tsconfig.legacy.json --noEmit false --outDir dist-legacy",
@@ -27,9 +27,11 @@
     "test:db": "node --env-file-if-exists=.env scripts/run-database-tests.mjs"
   },
   "dependencies": {
+    "@convex-dev/auth": "^0.0.95",
     "argon2": "0.44.0",
     "convex": "^1.45.0",
     "express": "^5.1.0",
+    "jose": "^5.10.0",
     "pg": "8.23.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
