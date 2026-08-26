@@ -13,6 +13,22 @@ h1, h2, h3, p { margin-top: 0; }
 .loading-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; border-radius: 1rem; color: var(--white); background: rgba(40,41,43,.88); box-shadow: 0 1.5rem 4rem rgba(0,0,0,.28); }
 .session-recovery { width: min(32rem,100%); align-items: stretch; flex-direction: column; }
 .session-recovery span { color: #dce5f1; line-height: 1.5; }
+.onshape-panel-shell { min-height: 100vh; padding: 1rem; color: var(--ink); background: var(--paper); }
+.panel-brand { display: grid; grid-template-columns: 2.7rem 1fr auto; align-items: center; gap: .65rem; margin-bottom: 1rem; padding-bottom: .8rem; border-bottom: 1px solid var(--line); }
+.panel-brand img { width: 2.7rem; height: 2.7rem; border-radius: .6rem; }
+.panel-brand div { display: grid; gap: .08rem; color: var(--navy); }
+.panel-brand small { color: var(--warm); font-size: .72rem; }
+.panel-user { display: flex; justify-content: space-between; gap: .5rem; margin-bottom: .75rem; color: var(--warm); font-size: .8rem; }
+.panel-user strong { color: var(--ink); }
+.panel-card, .panel-alert { margin-bottom: .75rem; padding: 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--white); }
+.panel-card h1 { margin-bottom: .4rem; color: var(--navy); font-size: 1.35rem; }
+.panel-alert { border-color: #d2b48c; background: #fff9ed; }
+.panel-alert strong { color: var(--navy); }
+.panel-alert p { margin: .35rem 0 .8rem; color: var(--warm); font-size: .82rem; line-height: 1.45; }
+.selection-data { margin: .8rem 0 0; }
+.selection-data div { display: grid; grid-template-columns: 7rem minmax(0,1fr); gap: .6rem; padding: .45rem 0; border-top: 1px solid var(--line); }
+.selection-data dt { color: var(--warm); font-size: .74rem; }
+.selection-data dd { margin: 0; overflow-wrap: anywhere; color: var(--ink); font-family: ui-monospace,SFMono-Regular,Consolas,monospace; font-size: .74rem; }
 .spinner { width: 1.25rem; height: 1.25rem; border: 3px solid var(--mist); border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
 .spinner-error { border-color: #ef9aa0; animation: none; } @keyframes spin { to { transform: rotate(360deg); } }
 .auth-shell { display: grid; grid-template-columns: minmax(22rem,1.05fr) minmax(24rem,.95fr); background: var(--paper); }

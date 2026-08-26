@@ -7,6 +7,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { PartsPage } from "./pages/PartsPage";
 import { AccountPage } from "./pages/AccountPage";
 import { AdminPage } from "./pages/AdminPage";
+import { OnshapePanelPage } from "./pages/OnshapePanelPage";
 import { AppLayout, type PageKey } from "./components/AppLayout";
 
 export function App() {
@@ -51,6 +52,10 @@ function AuthenticatedApp() {
   </section></main>;
   if (serverAuthenticated !== true || !setupComplete || profile === undefined || profile === null) {
     return <LoadingScreen message="Preparing your secure workspace…" />;
+  }
+
+  if (["/panel", "/onshape/panel"].includes(window.location.pathname)) {
+    return <OnshapePanelPage profile={profile} />;
   }
 
   return (
