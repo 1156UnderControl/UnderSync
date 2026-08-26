@@ -18,7 +18,7 @@ export function App() {
 }
 
 function AuthenticatedApp() {
-  const [page, setPage] = useState<PageKey>("dashboard");
+  const [page, setPage] = useState<PageKey>(() => window.location.pathname === "/account" ? "account" : "dashboard");
   const [setupError, setSetupError] = useState("");
   const [setupComplete, setSetupComplete] = useState(false);
   const [authenticationTimedOut, setAuthenticationTimedOut] = useState(false);

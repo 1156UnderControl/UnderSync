@@ -42,7 +42,29 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_userId_and_provider", ["userId", "provider"])
-    .index("by_provider", ["provider"]),
+    .index("by_provider", ["provider"])
+    .index("by_provider_and_externalUserId", ["provider", "externalUserId"]),
+
+  onshapeOAuthStates: defineTable({
+    userId: v.id("users"),
+    stateHash: v.string(),
+    redirectUri: v.string(),
+    expiresAt: v.number(),
+    consumedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_stateHash", ["stateHash"])
+    .index("by_userId", ["userId"]),
+
+  onshapeOAuthGrants: defineTable({
+    integrationAccountId: v.id("integrationAccounts"),
+    accessTokenEncrypted: v.string(),
+    refreshTokenEncrypted: v.optional(v.string()),
+    tokenType: v.string(),
+    scope: v.optional(v.string()),
+    expiresAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_integrationAccountId", ["integrationAccountId"]),
 
   appSettings: defineTable({
     key: v.string(),
