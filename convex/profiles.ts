@@ -61,17 +61,13 @@ export const registrationAvailability = internalQuery({
 });
 
 const defaultSubsystems = [
-  ["CH", "Chassis"], ["IN", "Intake"], ["SH", "Shooter"], ["CL", "Climber"],
-  ["EL", "Electronics"], ["OT", "Other"],
+  ["CH", "Chassis"],
 ] as const;
 const defaultMethods = [
-  ["MCNC", "Maus CNC"], ["MTOR", "Maus Torno"], ["CFL", "Cofer-Laser"],
-  ["LCNC", "Local-CNC"], ["LLAS", "Local-Laser"], ["IMP", "Impressora"],
-  ["MAN", "Manual"], ["RCL", "Rhino-CNC-Laser"],
+  ["MAN", "Manual"],
 ] as const;
 const defaultMaterials = [
-  ["AL", "Alumínio"], ["ACO", "Aço"], ["PLA", "PLA"], ["PETG", "PETG"],
-  ["ABS", "ABS"], ["MAD", "Madeira"], ["PC", "Policarbonato"],
+  ["PLA", "PLA"],
 ] as const;
 
 async function seedDefaults(ctx: MutationCtx) {
@@ -110,7 +106,7 @@ async function seedDefaults(ctx: MutationCtx) {
     if (material !== null) materialIds.set(code, material._id);
   }
   const compatibility: Record<string, readonly string[]> = {
-    MCNC: ["AL", "ACO", "PC"], MTOR: ["AL", "ACO"], CFL: ["ACO"],
+   MCNC: ["AL", "ACO", "PC"], MTOR: ["AL", "ACO"], CFL: ["ACO"],
     LCNC: ["AL", "MAD", "PC"], LLAS: ["MAD", "PC"], IMP: ["PLA", "PETG", "ABS"],
     MAN: ["AL", "ACO", "MAD", "PC"], RCL: ["MAD", "PC"],
   };
