@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { AuthPage } from "./pages/AuthPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { PartsPage } from "./pages/PartsPage";
+import { CotsPage } from "./pages/CotsPage";
 import { AccountPage } from "./pages/AccountPage";
 import { AdminPage } from "./pages/AdminPage";
 import { OnshapePanelPage } from "./pages/OnshapePanelPage";
@@ -62,6 +63,7 @@ function AuthenticatedApp() {
     <AppLayout user={profile.user} page={page} onNavigate={setPage}>
       {page === "dashboard" && <DashboardPage user={profile.user} onNavigate={setPage} />}
       {page === "parts" && <PartsPage />}
+      {page === "cots" && <CotsPage />}
       {page === "account" && <AccountPage profile={profile} />}
       {page === "admin" && profile.user.appRole === "ADMIN" && <AdminPage currentUserId={profile.user.id} />}
     </AppLayout>

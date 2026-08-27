@@ -69,6 +69,15 @@ const defaultMethods = [
 const defaultMaterials = [
   ["PLA", "PLA"],
 ] as const;
+const defaultCotsTypes = [
+  ["belts", "Belts", "⛓️", 10],
+  ["gears", "Gears", "⚙️", 20],
+  ["bearings", "Bearings", "◉", 30],
+] as const;
+const defaultCotsStatuses = [
+  ["IN_STOCK", "In stock", 10],
+  ["IN_USE", "In use", 20],
+] as const;
 
 async function seedDefaults(ctx: MutationCtx) {
   const setting = await ctx.db.query("appSettings").withIndex("by_key", (q) => q.eq("key", "seasonCode")).unique();
@@ -121,6 +130,16 @@ async function seedDefaults(ctx: MutationCtx) {
           q.eq("manufacturingMethodId", methodId).eq("materialId", materialId))
         .unique();
       if (existing === null) await ctx.db.insert("manufacturingMethodMaterials", { manufacturingMethodId: methodId, materialId });
+    }
+  }
+  for (const [slug, name, icon, sortOrder] of defaultCotsTypes) {
+    if (await ctx.db.query("cotsTypes").withIndex("by_slug", (q) => q.eq("slug", slug)).unique() === null) {
+      await ctx.db.insert("cotsTypes", { slug, name, icon, sortOrder, active: true });
+    }
+  }
+  for (const [code, name, sortOrder] of defaultCotsStatuses) {
+    if (await ctx.db.query("cotsStatuses").withIndex("by_code", (q) => q.eq("code", code)).unique() === null) {
+      await ctx.db.insert("cotsStatuses", { code, name, sortOrder, active: true });
     }
   }
 }

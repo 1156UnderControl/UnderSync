@@ -3,8 +3,9 @@ import { useState, type FormEvent } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Notice, PageHeader } from "../components/AppLayout";
+import { CotsAdminPage } from "./CotsAdminPage";
 
-type Tab = "users" | "parts" | "database";
+type Tab = "users" | "parts" | "cots" | "database";
 type Flash = { kind: "success" | "error"; text: string } | null;
 
 export function AdminPage({ currentUserId }: { currentUserId: string }) {
@@ -14,10 +15,12 @@ export function AdminPage({ currentUserId }: { currentUserId: string }) {
     <div className="tab-bar" role="tablist" aria-label="Admin sections">
       <button className={tab === "users" ? "active" : ""} onClick={() => setTab("users")}>Users</button>
       <button className={tab === "parts" ? "active" : ""} onClick={() => setTab("parts")}>Parts Tracking</button>
+      <button className={tab === "cots" ? "active" : ""} onClick={() => setTab("cots")}>COTS</button>
       <button className={tab === "database" ? "active" : ""} onClick={() => setTab("database")}>Database Explorer</button>
     </div>
     {tab === "users" && <UsersAdmin currentUserId={currentUserId} />}
     {tab === "parts" && <PartsConfiguration />}
+    {tab === "cots" && <CotsAdminPage />}
     {tab === "database" && <DatabaseExplorer />}
   </>;
 }

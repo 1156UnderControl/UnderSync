@@ -2,10 +2,11 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import type { ReactNode } from "react";
 import logo from "../assets/undersync-logo.png";
 
-export type PageKey = "dashboard" | "parts" | "account" | "admin";
+export type PageKey = "dashboard" | "parts" | "cots" | "account" | "admin";
 type User = { id: string; displayName: string; username: string; appRole: "ADMIN" | "MEMBER" };
 const navigation: Array<{ key: PageKey; label: string; icon: string }> = [
   { key: "dashboard", label: "Dashboard", icon: "⌂" }, { key: "parts", label: "Parts Tracking", icon: "◇" },
+  { key: "cots", label: "COTS", icon: "▦" },
   { key: "account", label: "Account", icon: "○" }, { key: "admin", label: "Admin", icon: "⚙" },
 ];
 

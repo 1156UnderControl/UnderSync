@@ -23,10 +23,14 @@ export const databaseSnapshot = query({
       ctx.db.query("appSettings").take(100), ctx.db.query("counters").take(100),
       ctx.db.query("subsystems").take(100), ctx.db.query("manufacturingMethods").take(100),
       ctx.db.query("materials").take(100), ctx.db.query("manufacturingMethodMaterials").take(100),
-      ctx.db.query("parts").take(100), ctx.db.query("auditEvents").take(100),
+      ctx.db.query("parts").take(100), ctx.db.query("cotsTypes").take(100),
+      ctx.db.query("cotsStatuses").take(100), ctx.db.query("cotsFieldDefinitions").take(100),
+      ctx.db.query("cotsItems").take(100), ctx.db.query("cotsItemFieldValues").take(100),
+      ctx.db.query("cotsItemQuantities").take(100), ctx.db.query("auditEvents").take(100),
     ]);
     const names = ["users", "integrationAccounts", "appSettings", "counters", "subsystems", "manufacturingMethods",
-      "materials", "manufacturingMethodMaterials", "parts", "auditEvents"];
+      "materials", "manufacturingMethodMaterials", "parts", "cotsTypes", "cotsStatuses", "cotsFieldDefinitions",
+      "cotsItems", "cotsItemFieldValues", "cotsItemQuantities", "auditEvents"];
     return tables.map((rows, index) => ({ name: names[index], rows: rows.map((row) => JSON.stringify(row)) }));
   },
 });

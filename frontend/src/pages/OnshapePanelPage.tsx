@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import logo from "../assets/undersync-logo.png";
+import { CotsPage } from "./CotsPage";
 
 type PanelProfile = {
   user: { displayName: string };
@@ -50,6 +51,7 @@ export function OnshapePanelPage({ profile }: { profile: PanelProfile }) {
   const [methodId, setMethodId] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const [mode, setMode] = useState<"parts" | "cots">("parts");
   const onshapeLinked = profile.integrations.some((item) => item.provider === "ONSHAPE" && item.status === "CONNECTED");
   const compatibleMaterials = useMemo(() => options?.materials.filter((material) =>
     material.active && material.methodIds.includes(methodId as Id<"manufacturingMethods">)) ?? [], [methodId, options]);
@@ -111,10 +113,12 @@ export function OnshapePanelPage({ profile }: { profile: PanelProfile }) {
   }
 
   return <main className="onshape-panel-shell">
-    <header className="panel-brand"><img src={logo} alt="" /><div><strong>UnderSync</strong><small>Onshape Parts Tracking</small></div>
+    <header className="panel-brand"><img src={logo} alt="" /><div><strong>UnderSync</strong><small>{mode === "cots" ? "COTS Inventory" : "Onshape Parts Tracking"}</small></div>
+      <button className={`panel-cots-button ${mode === "cots" ? "active" : ""}`} onClick={() => setMode("cots")}>COTS</button>
       <button className="text-button" onClick={() => void signOut()}>Sign out</button></header>
     <section className="panel-user"><span>Signed in as</span><strong>{profile.user.displayName}</strong></section>
-    {!onshapeLinked && <section className="panel-alert"><strong>Onshape account not linked</strong><p>Open UnderSync in a full browser tab and link this account before resolving or renaming selected parts.</p>
+    {mode === "cots" && <><button className="text-button panel-back-button" onClick={() => setMode("parts")}>← Parts Tracking</button><CotsPage compact /></>}
+    {mode === "parts" && <>{!onshapeLinked && <section className="panel-alert"><strong>Onshape account not linked</strong><p>Open UnderSync in a full browser tab and link this account before resolving or renaming selected parts.</p>
       <a className="button button-primary" href="/account" target="_blank" rel="noreferrer">Open account settings</a></section>}
     <section className="panel-card"><p className="eyebrow">1 · Select in Onshape</p><h1>{selection ? "Part selection received" : "Select one part"}</h1>
       <p className="muted">Choose one body, face, or edge in the current Part Studio.</p>
@@ -138,6 +142,6 @@ export function OnshapePanelPage({ profile }: { profile: PanelProfile }) {
         {result && <div className={`notice notice-${result.kind}`}>{result.text}</div>}
         <button className="button button-primary" disabled={busy || !methodId}>{busy ? "Resolving and registering…" : options.settings.submitLabel}</button>
       </form>}
-    </section>}
+    </section>}</>}
   </main>;
 }

@@ -124,6 +124,59 @@ export default defineSchema({
     .index("by_materialId", ["materialId"])
     .index("by_onshapeDocumentId_and_onshapeElementId_and_onshapePartId", ["onshapeDocumentId", "onshapeElementId", "onshapePartId"]),
 
+  cotsTypes: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    icon: v.string(),
+    sortOrder: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_active_and_sortOrder", ["active", "sortOrder"]),
+
+  cotsStatuses: defineTable({
+    name: v.string(),
+    code: v.string(),
+    sortOrder: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_code", ["code"])
+    .index("by_active_and_sortOrder", ["active", "sortOrder"]),
+
+  cotsFieldDefinitions: defineTable({
+    cotsTypeId: v.id("cotsTypes"),
+    key: v.string(),
+    label: v.string(),
+    sortOrder: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_cotsTypeId_and_sortOrder", ["cotsTypeId", "sortOrder"])
+    .index("by_cotsTypeId_and_key", ["cotsTypeId", "key"]),
+
+  cotsItems: defineTable({
+    cotsTypeId: v.id("cotsTypes"),
+    name: v.string(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_cotsTypeId", ["cotsTypeId"]),
+
+  cotsItemFieldValues: defineTable({
+    cotsItemId: v.id("cotsItems"),
+    fieldDefinitionId: v.id("cotsFieldDefinitions"),
+    value: v.string(),
+  })
+    .index("by_cotsItemId_and_fieldDefinitionId", ["cotsItemId", "fieldDefinitionId"])
+    .index("by_fieldDefinitionId", ["fieldDefinitionId"]),
+
+  cotsItemQuantities: defineTable({
+    cotsItemId: v.id("cotsItems"),
+    statusId: v.id("cotsStatuses"),
+    quantity: v.number(),
+  })
+    .index("by_cotsItemId_and_statusId", ["cotsItemId", "statusId"])
+    .index("by_statusId", ["statusId"]),
+
   auditEvents: defineTable({
     actorUserId: v.id("users"),
     action: v.string(),
