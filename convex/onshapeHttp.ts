@@ -101,14 +101,14 @@ export const onshapeCallback = httpAction(async (ctx, request) => {
     await ctx.runMutation(internal.onshapeOAuthData.saveGrant, {
       userId: stateRecord.userId,
       externalUserId: profile.id,
-      externalDisplayName: profile.displayName,
-      externalEmail: profile.email,
+      ...(profile.displayName ? { externalDisplayName: profile.displayName } : {}),
+      ...(profile.email ? { externalEmail: profile.email } : {}),
       accessTokenEncrypted: await encryptIntegrationSecret(tokens.accessToken, config.encryptionKey),
-      refreshTokenEncrypted: tokens.refreshToken
-        ? await encryptIntegrationSecret(tokens.refreshToken, config.encryptionKey)
-        : undefined,
+      ...(tokens.refreshToken ? {
+        refreshTokenEncrypted: await encryptIntegrationSecret(tokens.refreshToken, config.encryptionKey),
+      } : {}),
       tokenType: tokens.tokenType,
-      scope: tokens.scope,
+      ...(tokens.scope ? { scope: tokens.scope } : {}),
       expiresAt: Date.now() + tokens.expiresIn * 1000,
     });
     return redirectToAccount(siteUrl, "connected");

@@ -87,16 +87,16 @@ export const saveGrant = internalMutation({
       provider: "ONSHAPE",
       status: "CONNECTED",
       externalUserId: args.externalUserId,
-      externalDisplayName: args.externalDisplayName,
-      externalEmail: args.externalEmail,
+      ...(args.externalDisplayName ? { externalDisplayName: args.externalDisplayName } : {}),
+      ...(args.externalEmail ? { externalEmail: args.externalEmail } : {}),
       updatedAt: now,
     });
     if (existingAccount !== null) {
       await ctx.db.patch("integrationAccounts", existingAccount._id, {
         status: "CONNECTED",
         externalUserId: args.externalUserId,
-        externalDisplayName: args.externalDisplayName,
-        externalEmail: args.externalEmail,
+        ...(args.externalDisplayName ? { externalDisplayName: args.externalDisplayName } : {}),
+        ...(args.externalEmail ? { externalEmail: args.externalEmail } : {}),
         lastError: undefined,
         updatedAt: now,
       });
@@ -109,9 +109,9 @@ export const saveGrant = internalMutation({
     const grant = {
       integrationAccountId: accountId,
       accessTokenEncrypted: args.accessTokenEncrypted,
-      refreshTokenEncrypted: args.refreshTokenEncrypted,
+      ...(args.refreshTokenEncrypted ? { refreshTokenEncrypted: args.refreshTokenEncrypted } : {}),
       tokenType: args.tokenType,
-      scope: args.scope,
+      ...(args.scope ? { scope: args.scope } : {}),
       expiresAt: args.expiresAt,
       updatedAt: now,
     };
