@@ -121,7 +121,8 @@ export default defineSchema({
     .index("by_createdBy", ["createdBy"])
     .index("by_status", ["status"])
     .index("by_manufacturingMethodId", ["manufacturingMethodId"])
-    .index("by_materialId", ["materialId"]),
+    .index("by_materialId", ["materialId"])
+    .index("by_onshapeDocumentId_and_onshapeElementId_and_onshapePartId", ["onshapeDocumentId", "onshapeElementId", "onshapePartId"]),
 
   auditEvents: defineTable({
     actorUserId: v.id("users"),

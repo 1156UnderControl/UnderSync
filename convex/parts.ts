@@ -28,6 +28,7 @@ export const create = mutation({
   args: {
     name: v.string(), quantity: v.number(), subsystemId: v.id("subsystems"), designerId: v.id("users"),
     manufacturingMethodId: v.id("manufacturingMethods"), materialId: v.id("materials"),
+    onshapeDocumentId: v.optional(v.string()), onshapeElementId: v.optional(v.string()), onshapePartId: v.optional(v.string()),
   },
   returns: v.object({ id: v.id("parts"), trackingCode: v.string(), onshapeName: v.string() }),
   handler: async (ctx, args) => {
@@ -42,6 +43,15 @@ export const create = mutation({
     const compatible = await ctx.db.query("manufacturingMethodMaterials")
       .withIndex("by_manufacturingMethodId_and_materialId", (q) => q.eq("manufacturingMethodId", method._id).eq("materialId", material._id)).unique();
     if (!compatible) throw new Error("That material is not accepted by the fabrication method.");
+    if (args.onshapeDocumentId && args.onshapeElementId && args.onshapePartId) {
+      const existing = await ctx.db.query("parts")
+        .withIndex("by_onshapeDocumentId_and_onshapeElementId_and_onshapePartId", (q) => q
+          .eq("onshapeDocumentId", args.onshapeDocumentId)
+          .eq("onshapeElementId", args.onshapeElementId)
+          .eq("onshapePartId", args.onshapePartId))
+        .unique();
+      if (existing) throw new Error(`This Onshape part is already registered as ${existing.trackingCode}.`);
+    }
     const season = await ctx.db.query("appSettings").withIndex("by_key", (q) => q.eq("key", "seasonCode")).unique();
     const seasonCode = season?.value ?? "26"; const counterKey = `parts:${seasonCode}`;
     let counter = await ctx.db.query("counters").withIndex("by_key", (q) => q.eq("key", counterKey)).unique();
@@ -51,7 +61,11 @@ export const create = mutation({
     const trackingCode = `1156-${seasonCode}-${subsystem.code}-${String(sequenceValue).padStart(3, "0")}`;
     const id = await ctx.db.insert("parts", { trackingCode, sequenceValue, name, quantity: args.quantity, subsystemId: subsystem._id,
       designerId: designer._id, manufacturingMethodId: method._id, materialId: material._id, status: "IN_DEVELOPMENT",
-      createdBy: user._id, createdAt: Date.now() });
+      createdBy: user._id, createdAt: Date.now(),
+      ...(args.onshapeDocumentId ? { onshapeDocumentId: args.onshapeDocumentId } : {}),
+      ...(args.onshapeElementId ? { onshapeElementId: args.onshapeElementId } : {}),
+      ...(args.onshapePartId ? { onshapePartId: args.onshapePartId } : {}),
+    });
     await ctx.db.insert("auditEvents", { actorUserId: user._id, action: "PART_REGISTERED", targetType: "part", targetId: id,
       summary: `${name} registered as ${trackingCode}.`, createdAt: Date.now() });
     return { id, trackingCode, onshapeName: `${name} | ${trackingCode}` };

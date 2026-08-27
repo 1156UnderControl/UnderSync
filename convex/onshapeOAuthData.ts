@@ -11,6 +11,58 @@ export const currentUser = internalQuery({
   },
 });
 
+export const currentGrant = internalQuery({
+  args: {},
+  returns: v.object({
+    grantId: v.id("onshapeOAuthGrants"),
+    accessTokenEncrypted: v.string(),
+    refreshTokenEncrypted: v.union(v.string(), v.null()),
+    tokenType: v.string(),
+    scope: v.union(v.string(), v.null()),
+    expiresAt: v.number(),
+  }),
+  handler: async (ctx) => {
+    const user = await requireUser(ctx);
+    const account = await ctx.db.query("integrationAccounts")
+      .withIndex("by_userId_and_provider", (q) => q.eq("userId", user._id).eq("provider", "ONSHAPE"))
+      .unique();
+    if (!account || account.status !== "CONNECTED") throw new Error("Link your Onshape account before registering a selected part.");
+    const grant = await ctx.db.query("onshapeOAuthGrants")
+      .withIndex("by_integrationAccountId", (q) => q.eq("integrationAccountId", account._id))
+      .unique();
+    if (!grant) throw new Error("The linked Onshape account has no OAuth grant. Link it again.");
+    return {
+      grantId: grant._id,
+      accessTokenEncrypted: grant.accessTokenEncrypted,
+      refreshTokenEncrypted: grant.refreshTokenEncrypted ?? null,
+      tokenType: grant.tokenType,
+      scope: grant.scope ?? null,
+      expiresAt: grant.expiresAt,
+    };
+  },
+});
+
+export const replaceGrantTokens = internalMutation({
+  args: {
+    grantId: v.id("onshapeOAuthGrants"), accessTokenEncrypted: v.string(), refreshTokenEncrypted: v.string(),
+    tokenType: v.string(), scope: v.optional(v.string()), expiresAt: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const grant = await ctx.db.get("onshapeOAuthGrants", args.grantId);
+    if (!grant) throw new Error("The Onshape OAuth grant no longer exists.");
+    await ctx.db.patch("onshapeOAuthGrants", grant._id, {
+      accessTokenEncrypted: args.accessTokenEncrypted,
+      refreshTokenEncrypted: args.refreshTokenEncrypted,
+      tokenType: args.tokenType,
+      ...(args.scope ? { scope: args.scope } : {}),
+      expiresAt: args.expiresAt,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
 export const storeState = internalMutation({
   args: {
     userId: v.id("users"),

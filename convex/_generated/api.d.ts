@@ -18,6 +18,7 @@ import type * as lib_onshapeCrypto from "../lib/onshapeCrypto.js";
 import type * as onshapeHttp from "../onshapeHttp.js";
 import type * as onshapeOAuth from "../onshapeOAuth.js";
 import type * as onshapeOAuthData from "../onshapeOAuthData.js";
+import type * as onshapeParts from "../onshapeParts.js";
 import type * as parts from "../parts.js";
 import type * as partsConfig from "../partsConfig.js";
 import type * as profiles from "../profiles.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   onshapeHttp: typeof onshapeHttp;
   onshapeOAuth: typeof onshapeOAuth;
   onshapeOAuthData: typeof onshapeOAuthData;
+  onshapeParts: typeof onshapeParts;
   parts: typeof parts;
   partsConfig: typeof partsConfig;
   profiles: typeof profiles;

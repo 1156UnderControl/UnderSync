@@ -29,6 +29,10 @@ h1, h2, h3, p { margin-top: 0; }
 .selection-data div { display: grid; grid-template-columns: 7rem minmax(0,1fr); gap: .6rem; padding: .45rem 0; border-top: 1px solid var(--line); }
 .selection-data dt { color: var(--warm); font-size: .74rem; }
 .selection-data dd { margin: 0; overflow-wrap: anywhere; color: var(--ink); font-family: ui-monospace,SFMono-Regular,Consolas,monospace; font-size: .74rem; }
+.panel-form-grid { display: grid; gap: .8rem; margin-top: 1rem; }
+.panel-form-grid label { display: grid; gap: .35rem; color: var(--ink); font-size: .8rem; font-weight: 750; }
+.panel-form-grid .notice { margin: 0; font-size: .8rem; }
+.panel-form-grid > button { width: 100%; margin-top: .2rem; }
 .spinner { width: 1.25rem; height: 1.25rem; border: 3px solid var(--mist); border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
 .spinner-error { border-color: #ef9aa0; animation: none; } @keyframes spin { to { transform: rotate(360deg); } }
 .auth-shell { display: grid; grid-template-columns: minmax(22rem,1.05fr) minmax(24rem,.95fr); background: var(--paper); }
