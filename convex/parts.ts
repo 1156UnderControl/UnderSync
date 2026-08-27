@@ -48,7 +48,7 @@ export const create = mutation({
     const sequenceValue = (counter?.value ?? 0) + 1;
     if (counter) await ctx.db.patch("counters", counter._id, { value: sequenceValue });
     else await ctx.db.insert("counters", { key: counterKey, value: sequenceValue });
-    const trackingCode = `1156-${seasonCode}-${subsystem.code}-${method.code}-${material.code}-${String(sequenceValue).padStart(3, "0")}`;
+    const trackingCode = `1156-${seasonCode}-${subsystem.code}-${String(sequenceValue).padStart(3, "0")}`;
     const id = await ctx.db.insert("parts", { trackingCode, sequenceValue, name, quantity: args.quantity, subsystemId: subsystem._id,
       designerId: designer._id, manufacturingMethodId: method._id, materialId: material._id, status: "IN_DEVELOPMENT",
       createdBy: user._id, createdAt: Date.now() });

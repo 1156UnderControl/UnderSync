@@ -45,8 +45,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         };
       },
       validatePasswordRequirements(password) {
-        if (password.length < 8 || password.length > 128) {
-          throw new Error("Password must contain 8 to 128 characters.");
+        if (password.length < 4 || password.length > 254) {
+          throw new Error("Password must contain 4 to 254 characters.");
         }
       },
     }),
