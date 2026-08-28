@@ -61,7 +61,7 @@ export const registrationAvailability = internalQuery({
 });
 
 const defaultSubsystems = [
-  ["CH", "Chassis"],
+  ["01", "Chassis"],
 ] as const;
 const defaultMethods = [
   ["MAN", "Manual"],
@@ -79,9 +79,7 @@ const defaultCotsStatuses = [
   ["IN_USE", "In use", 20],
 ] as const;
 const defaultBuyListTypes = [
-  ["general", "General", "🛒", 10],
-  ["electronics", "Electronics", "⚡", 20],
-  ["hardware", "Hardware", "🔩", 30],
+  ["Screw/Bolts", "Screw/Bolts", "🔩", 30],
 ] as const;
 
 async function seedDefaults(ctx: MutationCtx) {
