@@ -78,6 +78,11 @@ const defaultCotsStatuses = [
   ["IN_STOCK", "In stock", 10],
   ["IN_USE", "In use", 20],
 ] as const;
+const defaultBuyListTypes = [
+  ["general", "General", "🛒", 10],
+  ["electronics", "Electronics", "⚡", 20],
+  ["hardware", "Hardware", "🔩", 30],
+] as const;
 
 async function seedDefaults(ctx: MutationCtx) {
   const setting = await ctx.db.query("appSettings").withIndex("by_key", (q) => q.eq("key", "seasonCode")).unique();
@@ -140,6 +145,11 @@ async function seedDefaults(ctx: MutationCtx) {
   for (const [code, name, sortOrder] of defaultCotsStatuses) {
     if (await ctx.db.query("cotsStatuses").withIndex("by_code", (q) => q.eq("code", code)).unique() === null) {
       await ctx.db.insert("cotsStatuses", { code, name, sortOrder, active: true });
+    }
+  }
+  for (const [slug, name, icon, sortOrder] of defaultBuyListTypes) {
+    if (await ctx.db.query("buyListTypes").withIndex("by_slug", (q) => q.eq("slug", slug)).unique() === null) {
+      await ctx.db.insert("buyListTypes", { slug, name, icon, sortOrder, active: true });
     }
   }
 }

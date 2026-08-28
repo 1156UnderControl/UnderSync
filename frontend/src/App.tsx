@@ -6,6 +6,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { PartsPage } from "./pages/PartsPage";
 import { CotsPage } from "./pages/CotsPage";
+import { BuyListPage } from "./pages/BuyListPage";
 import { AccountPage } from "./pages/AccountPage";
 import { AdminPage } from "./pages/AdminPage";
 import { OnshapePanelPage } from "./pages/OnshapePanelPage";
@@ -62,8 +63,9 @@ function AuthenticatedApp() {
   return (
     <AppLayout user={profile.user} page={page} onNavigate={setPage}>
       {page === "dashboard" && <DashboardPage user={profile.user} onNavigate={setPage} />}
-      {page === "parts" && <PartsPage />}
-      {page === "cots" && <CotsPage />}
+      {page === "parts" && <PartsPage isAdmin={profile.user.appRole === "ADMIN"} />}
+      {page === "buy" && <BuyListPage isAdmin={profile.user.appRole === "ADMIN"} />}
+      {page === "cots" && <CotsPage isAdmin={profile.user.appRole === "ADMIN"} />}
       {page === "account" && <AccountPage profile={profile} />}
       {page === "admin" && profile.user.appRole === "ADMIN" && <AdminPage currentUserId={profile.user.id} />}
     </AppLayout>

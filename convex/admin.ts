@@ -26,11 +26,15 @@ export const databaseSnapshot = query({
       ctx.db.query("parts").take(100), ctx.db.query("cotsTypes").take(100),
       ctx.db.query("cotsStatuses").take(100), ctx.db.query("cotsFieldDefinitions").take(100),
       ctx.db.query("cotsItems").take(100), ctx.db.query("cotsItemFieldValues").take(100),
-      ctx.db.query("cotsItemQuantities").take(100), ctx.db.query("auditEvents").take(100),
+      ctx.db.query("cotsItemQuantities").take(100), ctx.db.query("buyListTypes").take(100),
+      ctx.db.query("buyListFieldDefinitions").take(100), ctx.db.query("buyListItems").take(100),
+      ctx.db.query("buyListItemFieldValues").take(100), ctx.db.query("partExports").take(100),
+      ctx.db.query("archiveRequests").take(100), ctx.db.query("auditEvents").take(100),
     ]);
     const names = ["users", "integrationAccounts", "appSettings", "counters", "subsystems", "manufacturingMethods",
       "materials", "manufacturingMethodMaterials", "parts", "cotsTypes", "cotsStatuses", "cotsFieldDefinitions",
-      "cotsItems", "cotsItemFieldValues", "cotsItemQuantities", "auditEvents"];
+      "cotsItems", "cotsItemFieldValues", "cotsItemQuantities", "buyListTypes", "buyListFieldDefinitions",
+      "buyListItems", "buyListItemFieldValues", "partExports", "archiveRequests", "auditEvents"];
     return tables.map((rows, index) => ({ name: names[index], rows: rows.map((row) => JSON.stringify(row)) }));
   },
 });

@@ -4,11 +4,11 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Notice, PageHeader } from "../components/AppLayout";
 
-export function CotsPage({ compact = false }: { compact?: boolean }) {
+export function CotsPage({ compact = false, isAdmin = false }: { compact?: boolean; isAdmin?: boolean }) {
   const catalog = useQuery(api.cots.catalog);
   const [selectedTypeId, setSelectedTypeId] = useState<Id<"cotsTypes"> | null>(null);
   const content = selectedTypeId
-    ? <CotsTypePage cotsTypeId={selectedTypeId} onBack={() => setSelectedTypeId(null)} compact={compact} />
+    ? <CotsTypePage cotsTypeId={selectedTypeId} onBack={() => setSelectedTypeId(null)} compact={compact} isAdmin={isAdmin} />
     : <CotsCatalog catalog={catalog} onSelect={setSelectedTypeId} compact={compact} />;
   if (compact) return <div className="cots-compact">{content}</div>;
   return <>{!selectedTypeId && <PageHeader eyebrow="Inventory library" title="COTS" description="Browse commercial off-the-shelf components by type and see where every quantity is being used." />}{content}</>;
@@ -29,9 +29,10 @@ function CotsCatalog({ catalog, onSelect, compact }: {
     </button>)}</section>;
 }
 
-function CotsTypePage({ cotsTypeId, onBack, compact }: { cotsTypeId: Id<"cotsTypes">; onBack: () => void; compact: boolean }) {
+function CotsTypePage({ cotsTypeId, onBack, compact, isAdmin }: { cotsTypeId: Id<"cotsTypes">; onBack: () => void; compact: boolean; isAdmin: boolean }) {
   const details = useQuery(api.cots.typeDetails, { cotsTypeId });
   const createItem = useMutation(api.cots.createItem);
+  const deleteItem = useMutation(api.cots.deleteItem);
   const [showAdd, setShowAdd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
@@ -59,11 +60,19 @@ function CotsTypePage({ cotsTypeId, onBack, compact }: { cotsTypeId: Id<"cotsTyp
     {message && <Notice kind={message.kind}>{message.text}</Notice>}
     {details.items.length === 0 ? <p className="empty-state panel">No {details.type.name.toLowerCase()} have been added yet.</p> :
       <div className="cots-item-list">{details.items.map((item) => <article key={item.id}>
-        <div className="cots-item-heading"><h2>{item.name}</h2><div className="quantity-chips">{details.statuses.map((status) => {
+        <div className="cots-item-heading"><h2>{item.name}</h2><div className="row-actions"><div className="quantity-chips">{details.statuses.map((status) => {
           const quantity = item.quantities.find((row) => row.statusId === status.id)?.quantity ?? 0;
           return <span key={status.id}><strong>{quantity}</strong> {status.name.toLowerCase()}</span>;
-        })}</div></div>
-        {details.fields.length > 0 && <dl className="cots-values">{details.fields.map((field) => <div key={field.id}><dt>{field.label}</dt><dd>{item.values.find((row) => row.fieldDefinitionId === field.id)?.value ?? "—"}</dd></div>)}</dl>}
+        })}</div>{isAdmin && <button className="button button-small button-danger" onClick={() => {
+          if (!window.confirm(`Delete ${item.name}? This cannot be undone.`)) return;
+          setMessage(null); void deleteItem({ itemId: item.id })
+            .then(() => setMessage({ kind: "success", text: "COTS item deleted." }))
+            .catch((error: unknown) => setMessage({ kind: "error", text: error instanceof Error ? error.message : "Unable to delete this item." }));
+        }}>Delete</button>}</div></div>
+        {details.fields.length > 0 && <dl className="cots-values">{details.fields.map((field) => {
+          const value = item.values.find((row) => row.fieldDefinitionId === field.id)?.value;
+          return <div key={field.id}><dt>{field.label}</dt><dd>{field.fieldType === "BOOLEAN" ? value === "true" ? "Yes" : "No" : value ?? "—"}</dd></div>;
+        })}</dl>}
       </article>)}</div>}
     {showAdd && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !busy && setShowAdd(false)}>
       <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="add-cots-title">
@@ -71,7 +80,9 @@ function CotsTypePage({ cotsTypeId, onBack, compact }: { cotsTypeId: Id<"cotsTyp
           <button className="text-button" type="button" disabled={busy} onClick={() => setShowAdd(false)}>Close</button></div>
         <form className="form-stack" onSubmit={submit}>
           <label>Name<input name="name" required minLength={2} maxLength={160} placeholder={details.type.name === "Gears" ? "50T gear" : "Item name"} autoFocus /></label>
-          {details.fields.map((field) => <label key={field.id}>{field.label}<input name={`field-${field.id}`} required maxLength={500} /></label>)}
+          {details.fields.map((field) => <label key={field.id}>{field.label}{field.fieldType === "BOOLEAN"
+            ? <select name={`field-${field.id}`} required defaultValue=""><option value="" disabled>Select…</option><option value="true">Yes</option><option value="false">No</option></select>
+            : <input name={`field-${field.id}`} required maxLength={500} />}</label>)}
           {details.statuses.length > 0 && <fieldset><legend>Quantity by status</legend><div className="cots-quantity-form">{details.statuses.map((status) => <label key={status.id}>{status.name}<input name={`status-${status.id}`} type="number" min={0} max={1000000} step={1} defaultValue={0} required /></label>)}</div></fieldset>}
           <div className="form-actions"><button className="button" type="button" disabled={busy} onClick={() => setShowAdd(false)}>Cancel</button><button className="button button-primary" disabled={busy}>{busy ? "Adding…" : "Add"}</button></div>
         </form>

@@ -4,7 +4,8 @@ import { requireAdmin } from "./lib/auth";
 
 const typeValidator = v.object({ id: v.id("cotsTypes"), name: v.string(), slug: v.string(), icon: v.string(), sortOrder: v.number(), active: v.boolean() });
 const statusValidator = v.object({ id: v.id("cotsStatuses"), name: v.string(), code: v.string(), sortOrder: v.number(), active: v.boolean() });
-const fieldValidator = v.object({ id: v.id("cotsFieldDefinitions"), cotsTypeId: v.id("cotsTypes"), key: v.string(), label: v.string(), sortOrder: v.number(), active: v.boolean() });
+const fieldTypeValidator = v.union(v.literal("STRING"), v.literal("BOOLEAN"));
+const fieldValidator = v.object({ id: v.id("cotsFieldDefinitions"), cotsTypeId: v.id("cotsTypes"), key: v.string(), label: v.string(), fieldType: fieldTypeValidator, sortOrder: v.number(), active: v.boolean() });
 
 function normalizedKey(value: string): string {
   const key = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
@@ -41,7 +42,7 @@ export const get = query({
     return {
       types: types.map((row) => ({ id: row._id, name: row.name, slug: row.slug, icon: row.icon, sortOrder: row.sortOrder, active: row.active })),
       statuses: statuses.map((row) => ({ id: row._id, name: row.name, code: row.code, sortOrder: row.sortOrder, active: row.active })),
-      fields: fields.map((row) => ({ id: row._id, cotsTypeId: row.cotsTypeId, key: row.key, label: row.label, sortOrder: row.sortOrder, active: row.active })),
+      fields: fields.map((row) => ({ id: row._id, cotsTypeId: row.cotsTypeId, key: row.key, label: row.label, fieldType: row.fieldType ?? "STRING" as const, sortOrder: row.sortOrder, active: row.active })),
     };
   },
 });
@@ -110,22 +111,27 @@ export const deleteStatus = mutation({
 });
 
 export const addField = mutation({
-  args: { cotsTypeId: v.id("cotsTypes"), label: v.string(), key: v.string(), sortOrder: v.number() }, returns: v.id("cotsFieldDefinitions"),
+  args: { cotsTypeId: v.id("cotsTypes"), label: v.string(), key: v.string(), fieldType: fieldTypeValidator, sortOrder: v.number() }, returns: v.id("cotsFieldDefinitions"),
   handler: async (ctx, args) => {
     await requireAdmin(ctx); const type = await ctx.db.get("cotsTypes", args.cotsTypeId); const label = args.label.trim(); const key = normalizedKey(args.key || label);
     if (!type) throw new Error("COTS type not found.");
     if (label.length < 2 || label.length > 100) throw new Error("Enter a valid question label.");
     if (await ctx.db.query("cotsFieldDefinitions").withIndex("by_cotsTypeId_and_key", (q) => q.eq("cotsTypeId", type._id).eq("key", key)).unique()) throw new Error("That question key already exists for this type.");
-    return await ctx.db.insert("cotsFieldDefinitions", { cotsTypeId: type._id, label, key, sortOrder: validOrder(args.sortOrder), active: true });
+    return await ctx.db.insert("cotsFieldDefinitions", { cotsTypeId: type._id, label, key, fieldType: args.fieldType, sortOrder: validOrder(args.sortOrder), active: true });
   },
 });
 
 export const updateField = mutation({
-  args: { id: v.id("cotsFieldDefinitions"), label: v.string(), sortOrder: v.number(), active: v.boolean() }, returns: v.null(),
+  args: { id: v.id("cotsFieldDefinitions"), label: v.string(), fieldType: fieldTypeValidator, sortOrder: v.number(), active: v.boolean() }, returns: v.null(),
   handler: async (ctx, args) => {
     await requireAdmin(ctx); const label = args.label.trim();
     if (label.length < 2 || label.length > 100) throw new Error("Enter a valid question label.");
-    await ctx.db.patch("cotsFieldDefinitions", args.id, { label, sortOrder: validOrder(args.sortOrder), active: args.active }); return null;
+    const existing = await ctx.db.get("cotsFieldDefinitions", args.id);
+    if (!existing) throw new Error("Question not found.");
+    if ((existing.fieldType ?? "STRING") !== args.fieldType && await ctx.db.query("cotsItemFieldValues").withIndex("by_fieldDefinitionId", (q) => q.eq("fieldDefinitionId", args.id)).first()) {
+      throw new Error("The answer type cannot change after values have been saved.");
+    }
+    await ctx.db.patch("cotsFieldDefinitions", args.id, { label, fieldType: args.fieldType, sortOrder: validOrder(args.sortOrder), active: args.active }); return null;
   },
 });
 

@@ -5,7 +5,7 @@ import { PageHeader, type PageKey } from "../components/AppLayout";
 export function DashboardPage({ user, onNavigate }: { user: { displayName: string }; onNavigate: (page: PageKey) => void }) {
   const summary = useQuery(api.dashboard.summary);
   return <><PageHeader eyebrow="Team operations" title={`Hello, ${user.displayName}`} description="A live view of the UnderSync workspace." actions={
-    <button className="button button-primary" onClick={() => onNavigate("parts")}>Register a part</button>} />
+    <button className="button button-primary" onClick={() => onNavigate("parts")}>Browse parts</button>} />
     <section className="metric-grid" aria-label="Workspace summary">
       <article className="metric-card"><span>Active members</span><strong>{summary?.users ?? "—"}</strong><small>Team accounts</small></article>
       <article className="metric-card"><span>Parts in development</span><strong>{summary?.parts ?? "—"}</strong><small>Tracked definitions</small></article>

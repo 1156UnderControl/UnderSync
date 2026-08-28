@@ -1,11 +1,14 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./lib/auth";
+import { requireAdmin, requireUser } from "./lib/auth";
 
 const typeSummaryValidator = v.object({
   id: v.id("cotsTypes"), name: v.string(), slug: v.string(), icon: v.string(), itemCount: v.number(), totalQuantity: v.number(),
 });
-const fieldValidator = v.object({ id: v.id("cotsFieldDefinitions"), key: v.string(), label: v.string(), sortOrder: v.number() });
+const fieldValidator = v.object({
+  id: v.id("cotsFieldDefinitions"), key: v.string(), label: v.string(),
+  fieldType: v.union(v.literal("STRING"), v.literal("BOOLEAN")), sortOrder: v.number(),
+});
 const statusValidator = v.object({ id: v.id("cotsStatuses"), code: v.string(), name: v.string(), sortOrder: v.number() });
 const itemValidator = v.object({
   id: v.id("cotsItems"), name: v.string(),
@@ -63,7 +66,10 @@ export const typeDetails = query({
     }
     return {
       type: { id: type._id, name: type.name, slug: type.slug, icon: type.icon },
-      fields: definitions.filter((row) => row.active).map((row) => ({ id: row._id, key: row.key, label: row.label, sortOrder: row.sortOrder })),
+      fields: definitions.filter((row) => row.active).map((row) => ({
+        id: row._id, key: row.key, label: row.label, fieldType: row.fieldType ?? "STRING" as const,
+        sortOrder: row.sortOrder,
+      })),
       statuses: statuses.map((row) => ({ id: row._id, code: row.code, name: row.name, sortOrder: row.sortOrder })),
       items: itemOutput,
     };
@@ -89,7 +95,12 @@ export const createItem = mutation({
     const valueMap = new Map(args.values.map((row) => [row.fieldDefinitionId, row.value.trim()]));
     for (const definition of activeDefinitions) {
       const value = valueMap.get(definition._id);
-      if (!value || value.length > 500) throw new Error(`Enter a valid value for ${definition.label}.`);
+      const fieldType = definition.fieldType ?? "STRING";
+      if (fieldType === "BOOLEAN") {
+        if (value !== "true" && value !== "false") throw new Error(`Choose yes or no for ${definition.label}.`);
+      } else if (!value || value.length > 500) {
+        throw new Error(`Enter a valid value for ${definition.label}.`);
+      }
     }
     const statuses = await ctx.db.query("cotsStatuses")
       .withIndex("by_active_and_sortOrder", (q) => q.eq("active", true)).take(100);
@@ -109,5 +120,29 @@ export const createItem = mutation({
     await ctx.db.insert("auditEvents", { actorUserId: user._id, action: "COTS_ITEM_CREATED", targetType: "cotsItem",
       targetId: itemId, summary: `${name} added to ${type.name}.`, createdAt: now });
     return itemId;
+  },
+});
+
+export const deleteItem = mutation({
+  args: { itemId: v.id("cotsItems") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const item = await ctx.db.get("cotsItems", args.itemId);
+    if (item === null) throw new Error("COTS item not found.");
+    const [values, quantities] = await Promise.all([
+      ctx.db.query("cotsItemFieldValues")
+        .withIndex("by_cotsItemId_and_fieldDefinitionId", (q) => q.eq("cotsItemId", item._id)).take(200),
+      ctx.db.query("cotsItemQuantities")
+        .withIndex("by_cotsItemId_and_statusId", (q) => q.eq("cotsItemId", item._id)).take(200),
+    ]);
+    for (const value of values) await ctx.db.delete("cotsItemFieldValues", value._id);
+    for (const quantity of quantities) await ctx.db.delete("cotsItemQuantities", quantity._id);
+    await ctx.db.delete("cotsItems", item._id);
+    await ctx.db.insert("auditEvents", {
+      actorUserId: admin._id, action: "COTS_ITEM_DELETED", targetType: "cotsItem",
+      targetId: item._id, summary: `${item.name} was deleted.`, createdAt: Date.now(),
+    });
+    return null;
   },
 });

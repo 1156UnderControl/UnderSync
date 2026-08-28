@@ -7,7 +7,7 @@ import logo from "../assets/undersync-logo.png";
 import { CotsPage } from "./CotsPage";
 
 type PanelProfile = {
-  user: { displayName: string };
+  user: { displayName: string; appRole: "ADMIN" | "MEMBER" };
   integrations: Array<{ provider: "ONSHAPE" | "NOTION"; status: string }>;
 };
 
@@ -117,7 +117,7 @@ export function OnshapePanelPage({ profile }: { profile: PanelProfile }) {
       <button className={`panel-cots-button ${mode === "cots" ? "active" : ""}`} onClick={() => setMode("cots")}>COTS</button>
       <button className="text-button" onClick={() => void signOut()}>Sign out</button></header>
     <section className="panel-user"><span>Signed in as</span><strong>{profile.user.displayName}</strong></section>
-    {mode === "cots" && <><button className="text-button panel-back-button" onClick={() => setMode("parts")}>← Parts Tracking</button><CotsPage compact /></>}
+    {mode === "cots" && <><button className="text-button panel-back-button" onClick={() => setMode("parts")}>← Parts Tracking</button><CotsPage compact isAdmin={profile.user.appRole === "ADMIN"} /></>}
     {mode === "parts" && <>{!onshapeLinked && <section className="panel-alert"><strong>Onshape account not linked</strong><p>Open UnderSync in a full browser tab and link this account before resolving or renaming selected parts.</p>
       <a className="button button-primary" href="/account" target="_blank" rel="noreferrer">Open account settings</a></section>}
     <section className="panel-card"><p className="eyebrow">1 · Select in Onshape</p><h1>{selection ? "Part selection received" : "Select one part"}</h1>

@@ -114,14 +114,18 @@ export default defineSchema({
     createdBy: v.id("users"),
     createdAt: v.number(),
     onshapeDocumentId: v.optional(v.string()),
+    onshapeWorkspaceId: v.optional(v.string()),
     onshapeElementId: v.optional(v.string()),
     onshapePartId: v.optional(v.string()),
+    onshapeConfiguration: v.optional(v.string()),
+    onshapeMicroversionId: v.optional(v.string()),
   })
     .index("by_trackingCode", ["trackingCode"])
     .index("by_createdBy", ["createdBy"])
     .index("by_status", ["status"])
     .index("by_manufacturingMethodId", ["manufacturingMethodId"])
     .index("by_materialId", ["materialId"])
+    .index("by_subsystemId", ["subsystemId"])
     .index("by_onshapeDocumentId_and_onshapeElementId_and_onshapePartId", ["onshapeDocumentId", "onshapeElementId", "onshapePartId"]),
 
   cotsTypes: defineTable({
@@ -147,6 +151,7 @@ export default defineSchema({
     cotsTypeId: v.id("cotsTypes"),
     key: v.string(),
     label: v.string(),
+    fieldType: v.optional(v.union(v.literal("STRING"), v.literal("BOOLEAN"))),
     sortOrder: v.number(),
     active: v.boolean(),
   })
@@ -176,6 +181,68 @@ export default defineSchema({
   })
     .index("by_cotsItemId_and_statusId", ["cotsItemId", "statusId"])
     .index("by_statusId", ["statusId"]),
+
+  buyListTypes: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    icon: v.string(),
+    sortOrder: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_active_and_sortOrder", ["active", "sortOrder"]),
+
+  buyListFieldDefinitions: defineTable({
+    buyListTypeId: v.id("buyListTypes"),
+    key: v.string(),
+    label: v.string(),
+    fieldType: v.union(v.literal("STRING"), v.literal("BOOLEAN")),
+    sortOrder: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_buyListTypeId_and_sortOrder", ["buyListTypeId", "sortOrder"])
+    .index("by_buyListTypeId_and_key", ["buyListTypeId", "key"]),
+
+  buyListItems: defineTable({
+    buyListTypeId: v.id("buyListTypes"),
+    name: v.string(),
+    quantity: v.number(),
+    purchased: v.boolean(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    archivedAt: v.optional(v.number()),
+  })
+    .index("by_buyListTypeId", ["buyListTypeId"])
+    .index("by_buyListTypeId_and_archivedAt", ["buyListTypeId", "archivedAt"])
+    .index("by_archivedAt", ["archivedAt"]),
+
+  buyListItemFieldValues: defineTable({
+    buyListItemId: v.id("buyListItems"),
+    fieldDefinitionId: v.id("buyListFieldDefinitions"),
+    value: v.string(),
+  })
+    .index("by_buyListItemId_and_fieldDefinitionId", ["buyListItemId", "fieldDefinitionId"])
+    .index("by_fieldDefinitionId", ["fieldDefinitionId"]),
+
+  partExports: defineTable({
+    partId: v.id("parts"),
+    storageId: v.id("_storage"),
+    format: v.union(v.literal("STL"), v.literal("PARASOLID")),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_partId", ["partId"]),
+
+  archiveRequests: defineTable({
+    scope: v.literal("PARTS_AND_BUY_LIST"),
+    status: v.union(v.literal("PENDING"), v.literal("APPROVED"), v.literal("REJECTED")),
+    requestedBy: v.id("users"),
+    requestedAt: v.number(),
+    decidedBy: v.optional(v.id("users")),
+    decidedAt: v.optional(v.number()),
+  })
+    .index("by_status", ["status"])
+    .index("by_requestedBy_and_status", ["requestedBy", "status"]),
 
   auditEvents: defineTable({
     actorUserId: v.id("users"),

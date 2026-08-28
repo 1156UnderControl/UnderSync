@@ -10,6 +10,8 @@
 
 import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
+import type * as buyList from "../buyList.js";
+import type * as buyListAdmin from "../buyListAdmin.js";
 import type * as cots from "../cots.js";
 import type * as cotsAdmin from "../cotsAdmin.js";
 import type * as dashboard from "../dashboard.js";
@@ -18,6 +20,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_onshapeConfig from "../lib/onshapeConfig.js";
 import type * as lib_onshapeCrypto from "../lib/onshapeCrypto.js";
 import type * as onshapeHttp from "../onshapeHttp.js";
+import type * as onshapeDownloads from "../onshapeDownloads.js";
 import type * as onshapeOAuth from "../onshapeOAuth.js";
 import type * as onshapeOAuthData from "../onshapeOAuthData.js";
 import type * as onshapeParts from "../onshapeParts.js";
@@ -25,6 +28,7 @@ import type * as parts from "../parts.js";
 import type * as partsConfig from "../partsConfig.js";
 import type * as profiles from "../profiles.js";
 import type * as system from "../system.js";
+import type * as undersyncAdmin from "../undersyncAdmin.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -36,6 +40,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   auth: typeof auth;
+  buyList: typeof buyList;
+  buyListAdmin: typeof buyListAdmin;
   cots: typeof cots;
   cotsAdmin: typeof cotsAdmin;
   dashboard: typeof dashboard;
@@ -44,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   "lib/onshapeConfig": typeof lib_onshapeConfig;
   "lib/onshapeCrypto": typeof lib_onshapeCrypto;
   onshapeHttp: typeof onshapeHttp;
+  onshapeDownloads: typeof onshapeDownloads;
   onshapeOAuth: typeof onshapeOAuth;
   onshapeOAuthData: typeof onshapeOAuthData;
   onshapeParts: typeof onshapeParts;
@@ -51,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   partsConfig: typeof partsConfig;
   profiles: typeof profiles;
   system: typeof system;
+  undersyncAdmin: typeof undersyncAdmin;
   validators: typeof validators;
 }>;
 

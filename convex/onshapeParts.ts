@@ -122,7 +122,10 @@ export const register = action({
     const created: { id: Id<"parts">; trackingCode: string; onshapeName: string } = await ctx.runMutation(api.parts.create, {
       name: args.name, quantity: args.quantity, subsystemId: args.subsystemId, designerId: args.designerId,
       manufacturingMethodId: args.manufacturingMethodId, materialId: args.materialId,
-      onshapeDocumentId: args.documentId, onshapeElementId: args.elementId, onshapePartId: part.partId,
+      onshapeDocumentId: args.documentId, onshapeWorkspaceId: args.workspaceId,
+      onshapeElementId: args.elementId, onshapePartId: part.partId,
+      ...(args.configuration ? { onshapeConfiguration: args.configuration } : {}),
+      onshapeMicroversionId: args.microversionId,
     });
     const onshapeName = `${args.name.trim()} | ${created.trackingCode}`;
     const renameUrl = new URL(`${base}/api/v10/metadata/d/${encodeURIComponent(args.documentId)}/w/${encodeURIComponent(args.workspaceId)}/e/${encodeURIComponent(args.elementId)}/p/${encodeURIComponent(part.partId)}`);

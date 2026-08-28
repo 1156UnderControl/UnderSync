@@ -4,8 +4,10 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Notice, PageHeader } from "../components/AppLayout";
 import { CotsAdminPage } from "./CotsAdminPage";
+import { BuyListAdminPage } from "./BuyListAdminPage";
+import { UnderSyncAdminPage } from "./UnderSyncAdminPage";
 
-type Tab = "users" | "parts" | "cots" | "database";
+type Tab = "users" | "parts" | "cots" | "buy" | "undersync" | "database";
 type Flash = { kind: "success" | "error"; text: string } | null;
 
 export function AdminPage({ currentUserId }: { currentUserId: string }) {
@@ -16,11 +18,15 @@ export function AdminPage({ currentUserId }: { currentUserId: string }) {
       <button className={tab === "users" ? "active" : ""} onClick={() => setTab("users")}>Users</button>
       <button className={tab === "parts" ? "active" : ""} onClick={() => setTab("parts")}>Parts Tracking</button>
       <button className={tab === "cots" ? "active" : ""} onClick={() => setTab("cots")}>COTS</button>
+      <button className={tab === "buy" ? "active" : ""} onClick={() => setTab("buy")}>Buy List</button>
+      <button className={tab === "undersync" ? "active" : ""} onClick={() => setTab("undersync")}>UnderSync</button>
       <button className={tab === "database" ? "active" : ""} onClick={() => setTab("database")}>Database Explorer</button>
     </div>
     {tab === "users" && <UsersAdmin currentUserId={currentUserId} />}
     {tab === "parts" && <PartsConfiguration />}
     {tab === "cots" && <CotsAdminPage />}
+    {tab === "buy" && <BuyListAdminPage />}
+    {tab === "undersync" && <UnderSyncAdminPage currentUserId={currentUserId} />}
     {tab === "database" && <DatabaseExplorer />}
   </>;
 }
