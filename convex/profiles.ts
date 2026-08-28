@@ -4,7 +4,7 @@ import { action, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { integrationSummaryValidator, userSummaryValidator } from "./validators";
+import { integrationSummaryValidator, measurementUnitValidator, numberFormatValidator, userSummaryValidator } from "./validators";
 import { requireUser, userSummary } from "./lib/auth";
 
 const resolvedAccountValidator = v.union(
@@ -173,6 +173,8 @@ export const ensureCurrent = mutation({
       teamRole: user.teamRole ?? "Team member",
       appRole: bootstrapAdmin ? "ADMIN" as const : user.appRole ?? "MEMBER" as const,
       status: user.status ?? "ACTIVE" as const,
+      measurementUnit: user.measurementUnit ?? "MM" as const,
+      numberFormat: user.numberFormat ?? "DECIMAL" as const,
     };
     await ctx.db.patch("users", userId, patch);
     if (bootstrapAdmin) {
@@ -225,6 +227,18 @@ export const updateCurrent = mutation({
     const existing = await ctx.db.query("users").withIndex("by_appUsername", (q) => q.eq("appUsername", username)).unique();
     if (existing !== null && existing._id !== user._id) throw new Error("That account name is already in use.");
     await ctx.db.patch("users", user._id, { appUsername: username, displayName, name: displayName, teamRole });
+    const updated = await ctx.db.get("users", user._id);
+    if (updated === null) throw new Error("Account not found.");
+    return userSummary(updated);
+  },
+});
+
+export const updatePreferences = mutation({
+  args: { measurementUnit: measurementUnitValidator, numberFormat: numberFormatValidator },
+  returns: userSummaryValidator,
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    await ctx.db.patch("users", user._id, args);
     const updated = await ctx.db.get("users", user._id);
     if (updated === null) throw new Error("Account not found.");
     return userSummary(updated);

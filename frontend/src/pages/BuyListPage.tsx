@@ -5,22 +5,22 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { Notice, PageHeader } from "../components/AppLayout";
 import { CotsIcon } from "./CotsPage";
 
-export function BuyListPage({ isAdmin }: { isAdmin: boolean }) {
+export function BuyListPage({ isAdmin, compact = false }: { isAdmin: boolean; compact?: boolean }) {
   const catalog = useQuery(api.buyList.catalog);
   const settings = useQuery(api.buyList.settings);
   const [selectedTypeId, setSelectedTypeId] = useState<Id<"buyListTypes"> | null>(null);
-  if (selectedTypeId) return <BuyListTypePage buyListTypeId={selectedTypeId} onBack={() => setSelectedTypeId(null)} isAdmin={isAdmin} addLabel={settings?.addLabel ?? "Add item"} />;
-  return <>
-    <PageHeader eyebrow="Purchasing" title={settings?.title ?? "Buy List"} description={settings?.description ?? "Organize everything the team needs to purchase."} />
+  if (selectedTypeId) return <div className={compact ? "cots-compact" : undefined}><BuyListTypePage buyListTypeId={selectedTypeId} onBack={() => setSelectedTypeId(null)} isAdmin={isAdmin} addLabel={settings?.addLabel ?? "Add item"} compact={compact} /></div>;
+  return <div className={compact ? "cots-compact" : undefined}>
+    {!compact && <PageHeader eyebrow="Purchasing" title={settings?.title ?? "Buy List"} description={settings?.description ?? "Organize everything the team needs to purchase."} />}
     {!catalog ? <p className="empty-state">Loading buy-list categories…</p> : catalog.length === 0
       ? <Notice>No active categories are configured. An administrator can add them in Admin → Buy List.</Notice>
-      : <section className="cots-grid">{catalog.map((type) => <button className="cots-type-card" key={type.id} onClick={() => setSelectedTypeId(type.id)}>
+      : <section className={compact ? "cots-grid cots-grid-compact" : "cots-grid"}>{catalog.map((type) => <button className="cots-type-card" key={type.id} onClick={() => setSelectedTypeId(type.id)}>
         <CotsIcon value={type.icon} label={type.name} /><span><strong>{type.name}</strong><small>{type.itemCount} entries · {type.totalQuantity} units requested</small></span><span className="cots-card-arrow">→</span>
       </button>)}</section>}
-  </>;
+  </div>;
 }
 
-function BuyListTypePage({ buyListTypeId, onBack, isAdmin, addLabel }: { buyListTypeId: Id<"buyListTypes">; onBack: () => void; isAdmin: boolean; addLabel: string }) {
+function BuyListTypePage({ buyListTypeId, onBack, isAdmin, addLabel, compact }: { buyListTypeId: Id<"buyListTypes">; onBack: () => void; isAdmin: boolean; addLabel: string; compact: boolean }) {
   const details = useQuery(api.buyList.typeDetails, { buyListTypeId });
   const createItem = useMutation(api.buyList.createItem);
   const setPurchased = useMutation(api.buyList.setPurchased);
@@ -40,7 +40,7 @@ function BuyListTypePage({ buyListTypeId, onBack, isAdmin, addLabel }: { buyList
     finally { setBusy(false); }
   }
 
-  return <section className="cots-detail"><header className="cots-detail-header"><button className="text-button" onClick={onBack}>← All categories</button>
+  return <section className={compact ? "cots-detail cots-detail-compact" : "cots-detail"}><header className="cots-detail-header"><button className="text-button" onClick={onBack}>← All categories</button>
     <div><CotsIcon value={details.type.icon} label={details.type.name} /><span><p className="eyebrow">Buy-list category</p><h1>{details.type.name}</h1></span></div>
     <button className="button button-primary" onClick={() => { setShowAdd(true); setMessage(null); }}>{addLabel}</button></header>
     {message && <Notice kind={message.kind}>{message.text}</Notice>}

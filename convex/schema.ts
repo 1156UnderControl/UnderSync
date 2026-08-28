@@ -23,6 +23,8 @@ export default defineSchema({
     teamRole: v.optional(v.string()),
     appRole: v.optional(appRoleValidator),
     status: v.optional(userStatusValidator),
+    measurementUnit: v.optional(v.union(v.literal("MM"), v.literal("IN"))),
+    numberFormat: v.optional(v.union(v.literal("DECIMAL"), v.literal("FRACTION"))),
   })
     .index("email", ["email"])
     .index("phone", ["phone"])
@@ -131,6 +133,7 @@ export default defineSchema({
   cotsTypes: defineTable({
     name: v.string(),
     slug: v.string(),
+    code: v.optional(v.string()),
     icon: v.string(),
     sortOrder: v.number(),
     active: v.boolean(),
@@ -151,12 +154,25 @@ export default defineSchema({
     cotsTypeId: v.id("cotsTypes"),
     key: v.string(),
     label: v.string(),
-    fieldType: v.optional(v.union(v.literal("STRING"), v.literal("BOOLEAN"))),
+    code: v.optional(v.string()),
+    fieldType: v.optional(v.union(
+      v.literal("STRING"), v.literal("BOOLEAN"), v.literal("SELECT"), v.literal("MEASUREMENT"),
+    )),
     sortOrder: v.number(),
     active: v.boolean(),
   })
     .index("by_cotsTypeId_and_sortOrder", ["cotsTypeId", "sortOrder"])
     .index("by_cotsTypeId_and_key", ["cotsTypeId", "key"]),
+
+  cotsFieldOptions: defineTable({
+    fieldDefinitionId: v.id("cotsFieldDefinitions"),
+    label: v.string(),
+    value: v.string(),
+    sortOrder: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_fieldDefinitionId_and_sortOrder", ["fieldDefinitionId", "sortOrder"])
+    .index("by_fieldDefinitionId_and_value", ["fieldDefinitionId", "value"]),
 
   cotsItems: defineTable({
     cotsTypeId: v.id("cotsTypes"),

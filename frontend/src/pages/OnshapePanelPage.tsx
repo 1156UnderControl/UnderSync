@@ -5,9 +5,10 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import logo from "../assets/undersync-logo.png";
 import { CotsPage } from "./CotsPage";
+import { BuyListPage } from "./BuyListPage";
 
 type PanelProfile = {
-  user: { displayName: string; appRole: "ADMIN" | "MEMBER" };
+  user: { displayName: string; appRole: "ADMIN" | "MEMBER"; measurementUnit: "MM" | "IN"; numberFormat: "DECIMAL" | "FRACTION" };
   integrations: Array<{ provider: "ONSHAPE" | "NOTION"; status: string }>;
 };
 
@@ -51,7 +52,7 @@ export function OnshapePanelPage({ profile }: { profile: PanelProfile }) {
   const [methodId, setMethodId] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ kind: "success" | "error"; text: string } | null>(null);
-  const [mode, setMode] = useState<"parts" | "cots">("parts");
+  const [mode, setMode] = useState<"parts" | "cots" | "buy">("parts");
   const onshapeLinked = profile.integrations.some((item) => item.provider === "ONSHAPE" && item.status === "CONNECTED");
   const compatibleMaterials = useMemo(() => options?.materials.filter((material) =>
     material.active && material.methodIds.includes(methodId as Id<"manufacturingMethods">)) ?? [], [methodId, options]);
@@ -113,11 +114,13 @@ export function OnshapePanelPage({ profile }: { profile: PanelProfile }) {
   }
 
   return <main className="onshape-panel-shell">
-    <header className="panel-brand"><img src={logo} alt="" /><div><strong>UnderSync</strong><small>{mode === "cots" ? "COTS Inventory" : "Onshape Parts Tracking"}</small></div>
+    <header className="panel-brand"><img src={logo} alt="" /><div><strong>UnderSync</strong><small>{mode === "cots" ? "COTS Inventory" : mode === "buy" ? "Buy List" : "Onshape Parts Tracking"}</small></div>
       <button className={`panel-cots-button ${mode === "cots" ? "active" : ""}`} onClick={() => setMode("cots")}>COTS</button>
+      <button className={`panel-cots-button ${mode === "buy" ? "active" : ""}`} onClick={() => setMode("buy")}>Buy List</button>
       <button className="text-button" onClick={() => void signOut()}>Sign out</button></header>
     <section className="panel-user"><span>Signed in as</span><strong>{profile.user.displayName}</strong></section>
-    {mode === "cots" && <><button className="text-button panel-back-button" onClick={() => setMode("parts")}>← Parts Tracking</button><CotsPage compact isAdmin={profile.user.appRole === "ADMIN"} /></>}
+    {mode === "cots" && <><button className="text-button panel-back-button" onClick={() => setMode("parts")}>← Parts Tracking</button><CotsPage compact isAdmin={profile.user.appRole === "ADMIN"} preferences={{ measurementUnit: profile.user.measurementUnit, numberFormat: profile.user.numberFormat }} /></>}
+    {mode === "buy" && <><button className="text-button panel-back-button" onClick={() => setMode("parts")}>← Parts Tracking</button><BuyListPage compact isAdmin={profile.user.appRole === "ADMIN"} /></>}
     {mode === "parts" && <>{!onshapeLinked && <section className="panel-alert"><strong>Onshape account not linked</strong><p>Open UnderSync in a full browser tab and link this account before resolving or renaming selected parts.</p>
       <a className="button button-primary" href="/account" target="_blank" rel="noreferrer">Open account settings</a></section>}
     <section className="panel-card"><p className="eyebrow">1 · Select in Onshape</p><h1>{selection ? "Part selection received" : "Select one part"}</h1>

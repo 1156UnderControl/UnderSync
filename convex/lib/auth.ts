@@ -27,5 +27,7 @@ export function userSummary(user: Doc<"users">) {
     teamRole: user.teamRole ?? "Team member",
     appRole: user.appRole ?? ("MEMBER" as const),
     status: user.status ?? ("ACTIVE" as const),
+    measurementUnit: user.measurementUnit ?? ("MM" as const),
+    numberFormat: user.numberFormat ?? ("DECIMAL" as const),
   };
 }

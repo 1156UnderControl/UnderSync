@@ -12,6 +12,8 @@ export const connectionStatusValidator = v.union(
   v.literal("CONNECTED"),
   v.literal("ERROR"),
 );
+export const measurementUnitValidator = v.union(v.literal("MM"), v.literal("IN"));
+export const numberFormatValidator = v.union(v.literal("DECIMAL"), v.literal("FRACTION"));
 
 export const userSummaryValidator = v.object({
   id: v.id("users"),
@@ -21,6 +23,8 @@ export const userSummaryValidator = v.object({
   teamRole: v.string(),
   appRole: appRoleValidator,
   status: userStatusValidator,
+  measurementUnit: measurementUnitValidator,
+  numberFormat: numberFormatValidator,
 });
 
 export const integrationSummaryValidator = v.object({

@@ -65,7 +65,7 @@ function AuthenticatedApp() {
       {page === "dashboard" && <DashboardPage user={profile.user} onNavigate={setPage} />}
       {page === "parts" && <PartsPage isAdmin={profile.user.appRole === "ADMIN"} />}
       {page === "buy" && <BuyListPage isAdmin={profile.user.appRole === "ADMIN"} />}
-      {page === "cots" && <CotsPage isAdmin={profile.user.appRole === "ADMIN"} />}
+      {page === "cots" && <CotsPage isAdmin={profile.user.appRole === "ADMIN"} preferences={{ measurementUnit: profile.user.measurementUnit, numberFormat: profile.user.numberFormat }} />}
       {page === "account" && <AccountPage profile={profile} />}
       {page === "admin" && profile.user.appRole === "ADMIN" && <AdminPage currentUserId={profile.user.id} />}
     </AppLayout>
